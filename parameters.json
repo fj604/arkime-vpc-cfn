@@ -1,6 +1,6 @@
 {
     "Parameters": {
-                "VpcCIDR": "192.168.250.0/26",
+                "VpcCIDR": "192.168.250.0/24",
                 "PublicSubnet1CIDR":"192.168.250.0/27",
                 "PublicSubnet2CIDR": "192.168.250.64/27",
                 "PrivateSubnet1CIDR": "192.168.250.128/27",
