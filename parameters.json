@@ -9,7 +9,7 @@
                 "HTTPSLocation": "0.0.0.0/0",
                 "SSHLocation": "0.0.0.0/0",
                 "ESInstanceCount": 1,
-                "ESVolumeSize": 10,
+                "ESVolumeSize": 11,
                 "ESInstanceType": "r5.large.elasticsearch",
                 "ViewerInstanceType": "t3.small",
                 "CaptureInstanceType": "t3.small",

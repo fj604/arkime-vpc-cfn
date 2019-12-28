@@ -1,6 +1,7 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
 
+    
     "Description": "Deploy clustered Moloch packet capture system enhanced with Suricata IDS",
 
     "Metadata": {
