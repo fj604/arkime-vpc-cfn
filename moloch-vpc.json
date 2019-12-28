@@ -668,7 +668,10 @@
                             ] }
                         ]
                     } ]
-                }
+                },
+                "ServiceName": { "Fn::Sub": "com.amazonaws.${AWS::Region}.s3" },
+                "RouteTableIds": [{"Ref": "PrivateSubnet1"}, {"Ref": "PrivateSubnet2"}],
+                "VpcId": {"Ref": "VPC"}
             }
         },
         "NotificationTopic": {
