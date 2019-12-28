@@ -1,10 +1,10 @@
 {
     "Parameters": {
                 "VpcCIDR": "192.168.250.0/24",
-                "PublicSubnet1CIDR":"192.168.250.0/27",
-                "PublicSubnet2CIDR": "192.168.250.64/27",
-                "PrivateSubnet1CIDR": "192.168.250.128/27",
-                "PrivateSubnet2CIDR": "192.168.250.192/27",
+                "PublicSubnet1CIDR":"192.168.250.0/26",
+                "PublicSubnet2CIDR": "192.168.250.64/26",
+                "PrivateSubnet1CIDR": "192.168.250.128/26",
+                "PrivateSubnet2CIDR": "192.168.250.192/26",
                 "VXLANLocation": "0.0.0.0/0",
                 "HTTPSLocation": "0.0.0.0/0",
                 "SSHLocation": "0.0.0.0/0",
