@@ -1,7 +1,7 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
 
-    
+
     "Description": "Deploy clustered Moloch packet capture system enhanced with Suricata IDS",
 
     "Metadata": {
@@ -356,7 +356,9 @@
                 },
                 "ElasticsearchClusterConfig" : {
                     "InstanceCount": {"Ref": "ESInstanceCount"},
-                    "InstanceType": {"Ref": "ESInstanceType"}
+                    "InstanceType": {"Ref": "ESInstanceType"},
+                    "ZoneAwarenessEnabled": false
+                    }
                 },
                 "EBSOptions": {
                     "EBSEnabled": true,
@@ -368,8 +370,7 @@
                         { "Ref": "ESSecurityGroup" }
                     ],
                     "SubnetIds": [
-                        {"Ref": "PrivateSubnet1"},
-                        {"Ref": "PrivateSubnet2"}
+                        {"Ref": "PrivateSubnet1"}
                     ]
                 }
             }
@@ -648,8 +649,28 @@
             }
         },
         "S3Bucket": {
-            "Type": "AWS::S3::Bucket",
-            "DeletionPolicy": "Retain"
+            "Type": "AWS::S3::Bucket"
+        },
+        "S3Endpoint": {
+            "Type": "AWS::EC2::VPCEndpoint",
+            "Properties": {
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [ {
+                        "Effect": "Allow",
+                        "Principal": "*",
+                        "Action": ["s3:*"],
+                        "Resource": [
+                            {"Fn::Join": [
+                                "", [
+                                    {"Fn::GetAtt": ["S3Bucket", "Arn"]},
+                                    "/*"
+                                ]
+                            ] }
+                        ]
+                    } ]
+                }
+            }
         },
         "NotificationTopic": {
             "Type": "AWS::SNS::Topic",
