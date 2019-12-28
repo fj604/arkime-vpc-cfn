@@ -358,7 +358,6 @@
                     "InstanceCount": {"Ref": "ESInstanceCount"},
                     "InstanceType": {"Ref": "ESInstanceType"},
                     "ZoneAwarenessEnabled": false
-                    }
                 },
                 "EBSOptions": {
                     "EBSEnabled": true,
@@ -1326,7 +1325,6 @@
             }
         }
     },
-
     "Outputs": {
         "S3Bucket": {
             "Description": "S3 bucket for packet captures",
