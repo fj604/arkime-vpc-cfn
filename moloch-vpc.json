@@ -1,0 +1,1325 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+
+    "Description": "Deploy clustered Moloch packet capture system enhanced with Suricata IDS",
+
+    "Metadata": {
+        "AWS::CloudFormation::Interface": {
+            "ParameterGroups": [
+                {
+                    "Label": {"default": "Network settings"},
+                    "Parameters": ["VpcCIDR", "PublicSubnet1CIDR", "PublicSubnet2CIDR", "PrivateSubnet1CIDR", "PrivateSubnet2CIDR", "VXLANLocation", "HTTPSLocation", "SSHLocation"]
+                },
+                {
+                    "Label": {"default": "Moloch Instance settings"},
+                    "Parameters": ["ViewerInstanceType", "CaptureInstanceType", "Keypair", "LatestAmiId"]
+                },
+                {
+                    "Label": {"default": "Elasticsearch settings"},
+                    "Parameters": ["ESInstanceType", "ESInstanceCount", "ESVolumeSize"]
+                },
+                {
+                    "Label": {"default": "Moloch settings"},
+                    "Parameters": ["MolochDownloadURL",
+                        "AdminUser", "AdminPassword", "S2SPassword", "S3FMaxObjectSizeGB", "S3FlushInterval"]
+                },
+                {
+                    "Label": {"default": "Auto-scaling settings"},
+                    "Parameters": ["ViewerMinSize", "ViewerMaxSize", "CaptureMinSize", "CaptureMaxSize", "OperatorEMail"]
+                },
+                {
+                    "Label": {"default": "Viewer UI TLS settings"},
+                    "Parameters": ["CertificateArn"]
+                }
+            ],
+            "ParameterLabels": {
+                "VpcCIDR": {"default": "VPC CIDR"},
+                "PublicSubnet1CIDR": {"default": "Public subnet 1 CIDR"},
+                "PublicSubnet2CIDR": {"default": "Public subnet 2 CIDR"},
+                "PrivateSubnet1CIDR": {"default": "Private subnet 1 CIDR"},
+                "PrivateSubnet2CIDR": {"default": "Private subnet 2 CIDR"},
+                "VXLANLocation": {"default": "Traffic capture CIDR"},
+                "HTTPSLocation": {"default": "HTTPS CIDR"},
+                "SSHLocation": {"default": "SSH CIDR"},
+                "ESInstanceCount": {"default": "Number of Elasticsearch instances"},
+                "ESVolumeSize": {"default": "Elasticsearch volume size"},
+                "ESInstanceType": {"default": "Elasticsearch instance type"},
+                "ViewerInstanceType": {"default": "Viewer instance type"},
+                "CaptureInstanceType": {"default": "Capture instance type"},
+                "Keypair": {"default": "Key pair"},
+                "LatestAmiId": {"default": "Amazon Linux 2 AMI ID"},
+                "MolochDownloadURL": {"default": "Moloch download URL"},
+                "AdminUser": {"default": "Administrator username"},
+                "AdminPassword": {"default": "Administrator password"},
+                "S2SPassword": {"default": "S2S password"},
+                "S3FMaxObjectSizeGB": {"default": "Maximum packet capture size"},
+                "S3FlushInterval": {"default": "New packet capture object interval"},
+                "ViewerMinSize": {"default": "Minumum number of viewer instances"},
+                "ViewerMaxSize": {"default": "Maximum number of viewer instances"},
+                "CaptureMinSize": {"default": "Minumum number of capture instances"},
+                "CaptureMaxSize": {"default": "Maximum number of capture instances"},
+                "OperatorEMail": {"default": "Auto-scale notifications email address"},
+                "CertificateArn": {"default": "TLS Certificate ARN"}
+            }
+        }
+    },
+    "Parameters": {
+        "VpcCIDR": {
+            "Type": "String",
+            "Description": "IP range in CIDR notation for the VPC",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+            "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x.",
+            "MaxLength": "18",
+            "MinLength": "9"
+        },
+        "PublicSubnet1CIDR": {
+            "Type": "String",
+            "Description": "IP range in CIDR notation for the public subnet in the first Availability Zone",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+            "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x.",
+            "MaxLength": "18",
+            "MinLength": "9"
+        },
+        "PublicSubnet2CIDR": {
+            "Type": "String",
+            "Description": "IP range in CIDR notation for the public subnet in the second Availability Zone",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+            "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x.",
+            "MaxLength": "18",
+            "MinLength": "9"
+        },
+        "PrivateSubnet1CIDR": {
+            "Type": "String",
+            "Description": "IP range in CIDR notation for the private subnet in the first Availability Zone",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+            "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x.",
+            "MaxLength": "18",
+            "MinLength": "9"
+        },
+        "PrivateSubnet2CIDR": {
+            "Type": "String",
+            "Description": "IP range in CIDR notation for the private subnet in the second Availability Zone",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+            "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x.",
+            "MaxLength": "18",
+            "MinLength": "9"
+        },
+        "S3FlushInterval": {
+            "Type": "Number",
+            "Description": "Write new pcap object to S3 every x minutes, 0 to disable",
+            "Default": 1,
+            "ConstraintDescription": "must be between 0 and 720",
+            "MinValue": 0,
+            "MaxValue": 720
+        },
+        "S3FMaxObjectSizeGB": {
+            "Type": "Number",
+            "Description": "Maximum pcap file size to store in S3 in GB",
+            "Default": 4,
+            "ConstraintDescription": "must be between 0.01 and 1024",
+            "MinValue": 0.01,
+            "MaxValue": 1024
+        },
+        "ViewerMinSize": {
+            "Type": "Number",
+            "Description": "Minumum number of instances in the Capture Auto Scaling group",
+            "Default": 2,
+            "ConstraintDescription": "must be 1 or larger",
+            "MinValue": 1
+        },
+        "ViewerMaxSize": {
+            "Type": "Number",
+            "Description": "Maxiumum number of instances in the Capture Auto Scaling group",
+            "ConstraintDescription": "must be 1 or larger",
+            "Default": 2,
+            "MinValue": 1
+        },
+        "CaptureMinSize": {
+            "Type": "Number",
+            "Description": "Minumum number of instances in the Capture Auto Scaling group",
+            "Default": 2,
+            "ConstraintDescription": "must be 1 or larger",
+            "MinValue": 1
+        },
+        "CaptureMaxSize": {
+            "Type": "Number",
+            "Description": "Maxiumum number of instances in the Capture Auto Scaling group",
+            "ConstraintDescription": "must be 1 or larger",
+            "Default": 2,
+            "MinValue": 1
+        },
+        "ViewerInstanceType": {
+            "Type": "String",
+            "Default": "t3.small",
+            "AllowedValues": [
+                "t2.micro",
+                "t2.small",
+                "t2.medium",
+                "t2.large",
+                "t3.micro",
+                "t3.small",
+                "t3.medium",
+                "t3.large",
+                "t3a.micro",
+                "t3a.small",
+                "t3a.medium",
+                "t3a.large",
+                "m5.large",
+                "m5a.large",
+                "m5n.large",
+                "c5.large",
+                "c5n.large"
+            ],
+            "Description": "Enter Viewer instance type"
+        },
+        "CaptureInstanceType": {
+            "Type": "String",
+            "Default": "t3.small",
+            "AllowedValues": [
+                "t3.micro",
+                "t3.small",
+                "t3.medium",
+                "t3.large",
+                "t3a.small",
+                "t3a.medium",
+                "t3a.large",
+                "m5.large",
+                "m5a.large",
+                "m5n.large",
+                "c5.large",
+                "c5n.large"
+            ],
+            "Description": "Enter Capture instance type"
+        },
+        "Keypair": {
+            "Type": "AWS::EC2::KeyPair::KeyName",
+            "ConstraintDescription": "must be the name of an existing EC2 KeyPair.",
+            "Description": "Key pair for EC2 instances"
+        },
+        "OperatorEMail": {
+            "Description": "E-mail address to notify if there are any scaling operations",
+            "Type": "String",
+            "AllowedPattern": "([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)",
+            "ConstraintDescription": "must be a valid email address."
+        },   
+        "LatestAmiId": {
+            "Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
+            "Default": "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
+        },
+        "ESVersion" : {
+            "Type" : "String",
+            "Default": "7.1",
+            "AllowedValues": [
+                "6.7",
+                "6.8",
+                "7.1"
+            ],
+            "Description" : "ElasticSearch version"
+        },
+        "ESInstanceType": {
+            "Type": "String",
+            "Default": "t2.small.elasticsearch",
+            "AllowedValues": [
+                "t2.small.elasticsearch",
+                "t2.medium.elasticsearch",
+                "m5.large.elasticsearch",
+                "m4.large.elasticsearch",
+                "c5.large.elasticsearch",
+                "r5.large.elasticsearch",
+                "r4.large.elasticsearch",
+                "i3.large.elasticsearch"
+            ],
+            "Description": "Enter ElasticSearch instance type"
+        },
+        "ESInstanceCount": {
+            "Type": "Number",
+            "Description": "Number of ElasticSearch instances",
+            "Default": 1
+        },
+        "ESVolumeSize": {
+            "Type": "Number",
+            "Description": "EBS Volume size in GB",
+            "Default": 10
+        },
+        "CertificateArn": {
+            "Type": "String",
+            "Description": "TLS Certificate ARN from AWS Certificate Manager"
+        },
+        "SSHLocation": {
+            "Type": "String",
+            "Default": "0.0.0.0/0",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+            "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x.",
+            "Description": "Allow SSH access from x.x.x.x/x",
+            "MaxLength": "18",
+            "MinLength": "9"
+        },
+        "VXLANLocation": {
+            "Type": "String",
+            "Default": "0.0.0.0/0",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+            "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x.",
+            "Description": "Allow VXLAN traffic from x.x.x.x/x",
+            "MaxLength": "18",
+            "MinLength": "9"
+        },
+        "HTTPSLocation": {
+            "Type": "String",
+            "Default": "0.0.0.0/0",
+            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+            "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x.",
+            "Description": "Allow HTTPS access from x.x.x.x/x",
+            "MaxLength": "18",
+            "MinLength": "9"
+        },
+        "S2SPassword": {
+            "Type": "String",
+            "NoEcho": true,
+            "Description": "Enter S2S password, it can be random and it is not exposed to the end user",
+            "ConstraintDescription": "must be at least six alphanumeric characters",
+            "MinLength": "6",
+            "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*"
+        },
+        "MolochDownloadURL": {
+            "Type": "String",
+            "Default": "https://s3.amazonaws.com/files.molo.ch/moloch-master.centos7.x86_64.rpm",
+            "Description": "Enter Moloch CentOS 7 RPM package download URL",
+            "MinLength": "5"
+        },
+        "AdminUser": {
+            "Type": "String",
+            "Default": "admin",
+            "Description": "Enter admin username",
+            "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*",
+            "ConstraintDescription": "between 1 and 16 alphanumeric characters",
+            "MinLength": "1",
+            "MaxLength": "16"
+        },
+        "AdminPassword": {
+            "Type": "String",
+            "NoEcho": true,
+            "Description": "Enter admin password",
+            "ConstraintDescription": "must be at least six alphanumeric characters",
+            "MinLength": "6",
+            "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*"
+        }
+    },
+    "Resources": {
+        "VPC": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": {"Ref": "VpcCIDR"},
+                "EnableDnsHostnames": true
+            }
+        },
+        "ESSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enable ElasticSearch port 443",
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": {
+                            "Ref": "PrivateSubnet1CIDR"
+                        },
+                        "FromPort": 443,
+                        "IpProtocol": "tcp",
+                        "ToPort": 443
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "PrivateSubnet2CIDR"
+                        },
+                        "FromPort": 443,
+                        "IpProtocol": "tcp",
+                        "ToPort": 443
+                    }
+                ],
+                "VpcId": { "Ref": "VPC" }
+            }
+        },
+        "ElasticSearchDomain": {
+            "Type" : "AWS::Elasticsearch::Domain",
+            "Properties" : {
+                "AccessPolicies": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                              "AWS": "*"
+                            },
+                            "Action": "es:*",
+                            "Resource": "arn:aws:es:*"
+                        }
+                    ]
+                },
+                "ElasticsearchClusterConfig" : {
+                    "InstanceCount": {"Ref": "ESInstanceCount"},
+                    "InstanceType": {"Ref": "ESInstanceType"}
+                },
+                "EBSOptions": {
+                    "EBSEnabled": true,
+                    "VolumeSize": {"Ref": "ESVolumeSize"}
+                },
+                "ElasticsearchVersion" : {"Ref": "ESVersion"},
+                "VPCOptions" : {
+                    "SecurityGroupIds": [
+                        { "Ref": "ESSecurityGroup" }
+                    ],
+                    "SubnetIds": [
+                        {"Ref": "PrivateSubnet1"},
+                        {"Ref": "PrivateSubnet2"}
+                    ]
+                }
+            }
+        },
+        "InternetGateway": {
+            "Type": "AWS::EC2::InternetGateway"
+        },
+        "InternetGatewayAttachment": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "VpcId": {"Ref": "VPC"},
+                "InternetGatewayId": {"Ref": "InternetGateway"}
+            }
+        },
+        "PublicSubnet1": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {"Ref": "VPC"},
+                "AvailabilityZone": {"Fn::Select": [
+                    0, { "Fn::GetAZs" : ""}
+                    ]
+                },
+                "CidrBlock": {"Ref": "PublicSubnet1CIDR"}
+            }
+        },
+        "PublicSubnet2": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {"Ref": "VPC"},
+                "AvailabilityZone": {"Fn::Select": [
+                    1, { "Fn::GetAZs" : ""}
+                    ]
+                },
+                "CidrBlock": {"Ref": "PublicSubnet2CIDR"}
+            }
+        },
+        "PrivateSubnet1": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {"Ref": "VPC"},
+                "AvailabilityZone": {"Fn::Select": [
+                    0, { "Fn::GetAZs" : ""}
+                    ]
+                },
+                "CidrBlock": {"Ref": "PrivateSubnet1CIDR"}
+            }
+        },
+        "PrivateSubnet2": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {"Ref": "VPC"},
+                "AvailabilityZone": {"Fn::Select": [
+                    1, { "Fn::GetAZs" : ""}
+                    ]
+                },
+                "CidrBlock": {"Ref": "PrivateSubnet2CIDR"}
+            }
+        },
+        "NatGateway1EIP": {
+            "Type": "AWS::EC2::EIP",
+            "DependsOn": "InternetGatewayAttachment",
+            "Properties": {
+                "Domain": "vpc"
+            }
+        },
+        "NatGateway2EIP": {
+            "Type": "AWS::EC2::EIP",
+            "DependsOn": "InternetGatewayAttachment",
+            "Properties": {
+                "Domain": "vpc"
+            }
+        },
+        "NatGateway1": {
+            "Type": "AWS::EC2::NatGateway",
+            "Properties": {
+                "AllocationId": {"Fn::GetAtt":["NatGateway1EIP", "AllocationId"]},
+                "SubnetId": {"Ref": "PublicSubnet1"}
+            }
+        },
+        "NatGateway2": {
+            "Type": "AWS::EC2::NatGateway",
+            "Properties": {
+                "AllocationId": {"Fn::GetAtt":["NatGateway2EIP", "AllocationId"]},
+                "SubnetId": {"Ref": "PublicSubnet2"}
+            }
+        },
+        "PublicRouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {"Ref": "VPC"}
+            }
+        },
+        "DefaultPublicRoute": {
+            "Type": "AWS::EC2::Route",
+            "DependsOn": "InternetGatewayAttachment",
+            "Properties": {
+                "RouteTableId": {"Ref": "PublicRouteTable"},
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": {"Ref": "InternetGateway"}
+            }
+        },
+        "PublicSubnet1RouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {"Ref": "PublicRouteTable"},
+                "SubnetId": {"Ref": "PublicSubnet1"} 
+            }
+        },
+        "PublicSubnet2RouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {"Ref": "PublicRouteTable"},
+                "SubnetId": {"Ref": "PublicSubnet2"} 
+            }
+        },
+        "PrivateRouteTable1": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {"Ref": "VPC"}
+            }
+        },
+        "PrivateRouteTable2": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {"Ref": "VPC"}
+            }
+        },
+        "DefaultPrivateRoute1": {
+            "Type": "AWS::EC2::Route",
+            "Properties": {
+                "RouteTableId": {"Ref": "PrivateRouteTable1"},
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "NatGatewayId": {"Ref": "NatGateway1"}
+            }
+        },
+        "DefaultPrivateRoute2": {
+            "Type": "AWS::EC2::Route",
+            "Properties": {
+                "RouteTableId": {"Ref": "PrivateRouteTable2"},
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "NatGatewayId": {"Ref": "NatGateway2"}
+            }
+        },
+        "PrivateSubnet1RouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {"Ref": "PrivateRouteTable1"},
+                "SubnetId": {"Ref": "PrivateSubnet1"} 
+            }
+        },
+        "PrivateSubnet2RouteTableAssociation": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {"Ref": "PrivateRouteTable1"},
+                "SubnetId": {"Ref": "PrivateSubnet2"} 
+            }
+        },
+        "CaptureIAMRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "MolochCapturePolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:PutObject"
+                                    ],                                
+                                    "Resource": {
+                                        "Fn::Join": [
+                                            "", [
+                                                {
+                                                    "Fn::GetAtt": ["S3Bucket", "Arn"]
+                                                },
+                                                "/*"
+                                            ]
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "ViewerIAMRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            },
+                            "Action": [
+                                "sts:AssumeRole"
+                            ]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "MolochViewerPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": [
+                                        "s3:Get*",
+                                        "s3:List*",
+                                        "s3:DeleteObject"
+                                    ],                                
+                                    "Resource": {
+                                        "Fn::Join": [
+                                            "", [
+                                                {
+                                                    "Fn::GetAtt": ["S3Bucket", "Arn"]
+                                                },
+                                                "/*"
+                                            ]
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "CaptureInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "CaptureIAMRole"
+                    }
+                ]
+            }
+        },
+        "ViewerInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "ViewerIAMRole"
+                    }
+                ]
+            }
+        },
+        "S3Bucket": {
+            "Type": "AWS::S3::Bucket",
+            "DeletionPolicy": "Retain"
+        },
+        "NotificationTopic": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+            "Subscription": [ { "Endpoint": { "Ref": "OperatorEMail" }, "Protocol": "email" } ]
+            }
+        },
+        "VXLANLoadBalancer": {
+            "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "Properties": {
+                "Scheme": "internal",
+                "Subnets": [
+                    {"Ref": "PrivateSubnet1"},
+                    {"Ref": "PrivateSubnet2"}
+                ],
+                "Type": "network"
+            }
+        },
+        "TrafficMirrorTarget": {
+            "Type": "AWS::EC2::TrafficMirrorTarget",
+            "Properties": {
+                "NetworkLoadBalancerArn": { "Ref": "VXLANLoadBalancer"}
+            }
+        },
+        "VXLANListener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Properties": {
+                "DefaultActions": [
+                    {
+                        "Type": "forward",
+                        "TargetGroupArn": { "Ref" : "CaptureTargetGroup" } 
+                    }
+                ],
+                "LoadBalancerArn": { "Ref" : "VXLANLoadBalancer"},
+                "Port": 4789,
+                "Protocol": "UDP"
+            }
+        },
+        "ViewerLoadBalancer": {
+            "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "Properties": {
+                "Scheme": "internet-facing",
+                "Subnets": [
+                    {"Ref": "PublicSubnet1"},
+                    {"Ref": "PublicSubnet2"}
+                ],
+                "SecurityGroups": [
+                    {"Ref": "ViewerLBSecurityGroup" }
+                ],
+                "Type": "application"
+            }
+        },
+        "ViewerHTTPSListener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Properties": {
+                "Certificates": [
+                    {"CertificateArn": {"Ref": "CertificateArn"}}
+                ],
+                "DefaultActions": [
+                    {
+                        "Type": "forward",
+                        "TargetGroupArn": { "Ref" : "ViewerTargetGroup" } 
+                    }
+                ],
+                "LoadBalancerArn": { "Ref" : "ViewerLoadBalancer"},
+                "Port": 443,
+                "Protocol": "HTTPS"
+            }
+        },
+        "ViewerHTTPListener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Properties": {
+                "DefaultActions": [
+                    {
+                        "Type": "redirect",
+                        "RedirectConfig": {
+                            "Protocol": "HTTPS",
+                            "Port": "443",
+                            "Host": "#{host}",
+                            "Path": "/#{path}",
+                            "Query": "#{query",
+                            "StatusCode": "HTTP_301"
+                        }
+                    }
+                ],
+                "LoadBalancerArn": { "Ref" : "ViewerLoadBalancer"},
+                "Port": 80,
+                "Protocol": "HTTP"
+            }
+        },
+        "ViewerAutoScalingGroup": {
+            "Type" : "AWS::AutoScaling::AutoScalingGroup",
+            "DependsOn": "CaptureAutoScalingGroup",
+            "Properties" : {
+                "VPCZoneIdentifier": [
+                    {"Ref": "PrivateSubnet1"},
+                    {"Ref": "PrivateSubnet2"}
+                ],
+                "MinSize" : { "Ref" : "ViewerMinSize"},
+                "MaxSize" : { "Ref" : "ViewerMaxSize"},
+                "TargetGroupARNs": [
+                    { "Ref": "ViewerTargetGroup"}
+                ],
+                "LaunchTemplate": {
+                    "LaunchTemplateId": { "Ref" : "ViewerLaunchTemplate" },
+                    "Version": "1"
+                },
+                "HealthCheckType": "ELB",
+                "HealthCheckGracePeriod": 600,
+                "NotificationConfigurations": [
+                    {
+                        "TopicARN": { "Ref": "NotificationTopic" },
+                        "NotificationTypes": [
+                            "autoscaling:EC2_INSTANCE_LAUNCH",
+                            "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+                            "autoscaling:EC2_INSTANCE_TERMINATE",
+                            "autoscaling:EC2_INSTANCE_TERMINATE_ERROR",
+                            "autoscaling:TEST_NOTIFICATION"
+                        ]
+                    }
+                ]
+            },
+            "CreationPolicy": {
+                "ResourceSignal": {
+                    "Count": {"Ref": "ViewerMinSize"}
+                }
+            }
+        },
+        "CaptureAutoScalingGroup": {
+            "Type" : "AWS::AutoScaling::AutoScalingGroup",
+            "Properties" : {
+                "VPCZoneIdentifier": [
+                    {"Ref": "PrivateSubnet1"},
+                    {"Ref": "PrivateSubnet2"}
+                ],
+                "MinSize" : { "Ref" : "CaptureMinSize"},
+                "MaxSize" : { "Ref" : "CaptureMaxSize"},
+                "TargetGroupARNs": [
+                    { "Ref": "CaptureTargetGroup"}
+                ],
+                "LaunchTemplate": {
+                    "LaunchTemplateId": { "Ref" : "CaptureLaunchTemplate" },
+                    "Version": "1"
+                },
+                "HealthCheckType": "ELB",
+                "HealthCheckGracePeriod": 600,
+                "NotificationConfigurations": [
+                    {
+                        "TopicARN": { "Ref": "NotificationTopic" },
+                        "NotificationTypes": [
+                            "autoscaling:EC2_INSTANCE_LAUNCH",
+                            "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+                            "autoscaling:EC2_INSTANCE_TERMINATE",
+                            "autoscaling:EC2_INSTANCE_TERMINATE_ERROR",
+                            "autoscaling:TEST_NOTIFICATION"
+                        ]
+                    }
+                ]
+            },
+            "CreationPolicy": {
+                "ResourceSignal": {
+                    "Count": {"Ref": "CaptureMinSize"}
+                }
+            }
+        },
+        "CaptureTargetGroup": {
+            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+            "Properties": {
+                "HealthCheckPort": "22",
+                "Port": 4789,
+                "Protocol": "UDP",
+                "TargetType": "instance",
+                "VpcId": { "Ref" : "VPC"}
+            }
+        },
+        "ViewerTargetGroup": {
+            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+            "Properties": {
+                "HealthCheckPort": "8005",
+                "Port": 8005,
+                "Protocol": "HTTP",
+                "Matcher": {
+                    "HttpCode": "401"
+                },
+                "TargetType": "instance",
+                "VpcId": { "Ref" : "VPC"}
+            }
+        },
+        "ViewerLaunchTemplate": {
+            "Type": "AWS::EC2::LaunchTemplate",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "configSets": {
+                        "configure-all": [
+                            "install-moloch-dependencies",
+                            "install-moloch"
+                        ]
+                    },
+                    "install-moloch-dependencies": {
+                        "packages": {
+                            "yum": {
+                                "libyaml-devel": [],
+                                "perl-JSON": [],
+                                "perl-libwww-perl": [],
+                                "perl-LWP-Protocol-https": []
+                            }
+                        }
+                    },
+                    "install-moloch": {
+                        "packages": {
+                            "rpm": {
+                                "moloch": {"Ref": "MolochDownloadURL"}
+                            },
+                            "yum": {
+                                "crudini": []
+                            }
+                        },
+                        "files": {
+                            "/data/moloch/Configure-answers": {
+                                "content": { "Fn::Join": [ "\n", [
+                                    "eth0",
+                                    "no",
+                                    {"Fn::Join": [
+                                        "",
+                                        [
+                                            "https://",
+                                            {"Fn::GetAtt": ["ElasticSearchDomain", "DomainEndpoint"]}
+                                        ]
+                                    ] },
+                                    {"Ref": "S2SPassword"},
+                                    "yes"
+                                ] ] }
+                            }
+                        },
+                        "commands": {
+                            "1-remove-yum-prompt": {
+                                "command": "sed -i \"s/yum install/yum -y install/g\" /data/moloch/bin/Configure" 
+                            },
+                            "2-configure-moloch": {
+                                "command": "/data//moloch/bin/Configure < /data/moloch/Configure-answers"
+                            },
+                            "6.1-set-S3-region": {
+                                "command": {"Fn::Join": [" ", [
+                                    "crudini --set /data/moloch/etc/config.ini default s3Region",
+                                    { "Ref": "AWS::Region" }
+                                ] ]
+                                }
+                            },
+                            "6.2-set-S3-bucket": {
+                                "command": {"Fn::Join": [" ", [
+                                    "crudini --set /data/moloch/etc/config.ini default s3Bucket",
+                                    { "Ref": "S3Bucket" }
+                                ] ]
+                                }
+                            },
+                            "6.3-set-viewer-plugin": {
+                                "command": "crudini --set /data/moloch/etc/config.ini default viewerPlugins writer-s3/index.js"
+                            }                            
+                        },
+                        "services": {
+                            "sysvinit": {
+                                "molochviewer": {
+                                    "enabled": "true",
+                                    "ensureRunning": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "LaunchTemplateData": {
+                    "ImageId": { "Ref": "LatestAmiId" },
+                    "IamInstanceProfile": {
+                        "Name": { "Ref": "ViewerInstanceProfile" }
+                    },
+                    "InstanceType": { "Ref": "ViewerInstanceType" },
+                    "KeyName": { "Ref": "Keypair" },
+                    "SecurityGroupIds": [
+                        {
+                            "Ref": "ViewerInstanceSecurityGroup"
+                        }
+                    ],
+                    "UserData": {
+                        "Fn::Base64": {
+                            "Fn::Join": [
+                                "\n",
+                                [
+                                    "#!/bin/bash -xe",
+                                    "yum install -y aws-cfn-bootstrap",
+                                    {
+                                        "Fn::Join": [
+                                            " ",
+                                            [
+                                                "/opt/aws/bin/cfn-init -v -c configure-all",
+                                                "--stack",
+                                                {
+                                                    "Ref": "AWS::StackName"
+                                                },
+                                                "--resource LaunchTemplate",
+                                                "--region",
+                                                {
+                                                    "Ref": "AWS::Region"
+                                                }
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "Fn::Join": [
+                                            " ",
+                                            [
+                                                "/opt/aws/bin/cfn-signal",
+                                                "--stack",
+                                                {
+                                                    "Ref": "AWS::StackName"
+                                                },
+                                                " --region ",
+                                                {
+                                                    "Ref": "AWS::Region"
+                                                },
+                                                "--resource ViewerAutoScalingGroup"
+                                            ]
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "CaptureLaunchTemplate": {
+            "Type": "AWS::EC2::LaunchTemplate",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "configSets": {
+                        "configure-all": [
+                            "install-epel",
+                            "install-suricata",
+                            "install-moloch-dependencies",
+                            "install-moloch"
+                        ]
+                    },
+                    "install-epel": {
+                        "commands": {
+                            "install-epel-extra": {
+                                "command": "amazon-linux-extras install epel -y"
+                            }
+                        }
+                    },
+                    "install-suricata": {
+                        "packages": {
+                            "yum": {
+                                "suricata": []
+                            }
+                        },
+                        "files": {
+                            "/etc/sysconfig/suricata": {
+                                "content": "OPTIONS=\"--set decoder.vxlan.enabled=true -k none -i eth0 --user suricata udp port 4789\""
+                            }
+                        },
+                        "commands": {
+                            "1-update-suricata": {
+                                "command": "suricata-update"
+                            },
+                            "2-enable-hourly-updates": {
+                                "command":  "echo \"10 * * * * suricata-update && suricatasc -c reload-rules\" | crontab"
+                            }
+                        },
+                        "services": {
+                            "sysvinit": {
+                                "suricata": {
+                                    "enabled": "true",
+                                    "ensureRunning" : "true",
+                                    "files": ["/etc/suricata/suricata.yaml"]
+                                }
+                            }
+                        }
+                    },
+                    "install-moloch-dependencies": {
+                        "packages": {
+                            "yum": {
+                                "libyaml-devel": [],
+                                "perl-JSON": [],
+                                "perl-libwww-perl": [],
+                                "perl-LWP-Protocol-https": []
+                            }
+                        }
+                    },
+                    "install-moloch": {
+                        "packages": {
+                            "rpm": {
+                                "moloch": {"Ref": "MolochDownloadURL"}
+                            },
+                            "yum": {
+                                "crudini": []
+                            }
+                        },
+                        "files": {
+                            "/data/moloch/Configure-answers": {
+                                "content": { "Fn::Join": [ "\n", [
+                                    "eth0",
+                                    "no",
+                                    {"Fn::Join": [
+                                        "",
+                                        [
+                                            "https://",
+                                            {"Fn::GetAtt": ["ElasticSearchDomain", "DomainEndpoint"]}
+                                        ]
+                                    ] },
+                                    {"Ref": "S2SPassword"},
+                                    "yes"
+                                ] ] }
+                            },
+                            "/data/moloch/db/safeinit.sh": {
+                                "content": { "Fn::Join": [ "\n", [
+                                    "delay=$RANDOM",
+                                    "let 'delay %= 20'",
+                                    "echo \"Sleeping for $delay seconds...\"",
+                                    "sleep $delay",
+                                    "echo 'Checking ES URL:' $1",
+                                    "if /data/moloch/db/db.pl $1 info 2>/dev/null | grep 'DB Version' | grep '\\-1' >/dev/null",
+                                    "then",
+                                    "    echo 'ES running but not initialised, initialising...'",
+                                    "    /data/moloch/db/db.pl $1 init && /data/moloch/bin/moloch_add_user.sh \"$2\" \"Admin User\" \"$3\" --admin",
+                                    "    exit $?",
+                                    "elif /data/moloch/db/db.pl $1 info >/dev/null 2>&1",
+                                    "then",
+                                    "    echo 'ES running and initialised. Nothing to do.'",
+                                    "    exit 0",
+                                    "else",
+                                    "    echo 'ES not reachable'",
+                                    "    exit 1",
+                                    "fi"
+                                ] ] },
+                                "mode": "000700"
+                            }
+                        },
+                        "commands": {
+                            "1-remove-yum-prompt": {
+                                "command": "sed -i \"s/yum install/yum -y install/g\" /data/moloch/bin/Configure" 
+                            },
+                            "2-configure-moloch": {
+                                "command": "/data//moloch/bin/Configure < /data/moloch/Configure-answers"
+                            },
+                            "3-add-plugins": {
+                                "command": "crudini --set /data/moloch/etc/config.ini default plugins \"suricata.so; writer-s3.so\""
+                            },
+                            "4-add-suricata-alert-file": {
+                                "command": "crudini --set /data/moloch/etc/config.ini default suricataAlertFile /var/log/suricata/eve.json"
+                            },
+                            "5-add-bpf": {
+                                "command": "crudini --set /data/moloch/etc/config.ini default bpf \"udp port 4789\""
+                            },
+                            "6.1-set-S3-region": {
+                                "command": {"Fn::Join": [" ", [
+                                    "crudini --set /data/moloch/etc/config.ini default s3Region",
+                                    { "Ref": "AWS::Region" }
+                                ] ]
+                                }
+                            },
+                            "6.2-set-S3-bucket": {
+                                "command": {"Fn::Join": [" ", [
+                                    "crudini --set /data/moloch/etc/config.ini default s3Bucket",
+                                    { "Ref": "S3Bucket" }
+                                ] ]
+                                }
+                            },
+                            "6.3-set-viewer-plugin": {
+                                "command": "crudini --set /data/moloch/etc/config.ini default viewerPlugins writer-s3/index.js"
+                            },
+                            "6.5-set-pcap-write-method": {
+                                "command": "crudini --set /data/moloch/etc/config.ini default pcapWriteMethod s3"
+                            },
+                            "6.6-set-maxFileTimeM": {
+                                "command": {"Fn::Join": [" ", [
+                                    "crudini --set /data/moloch/etc/config.ini default maxFileTimeM",
+                                    { "Ref": "S3FlushInterval" }
+                                ] ]
+                                }
+                            },
+                            "6.7-set-maxFileSizeG": {
+                                "command": {"Fn::Join": [" ", [
+                                    "crudini --set /data/moloch/etc/config.ini default maxFileSizeG",
+                                    { "Ref": "S3FMaxObjectSizeGB" }
+                                ] ]
+                                }
+                            },
+                            "7-chmod-suricata-logs": {
+                                "command": "chmod 755 /var/log/suricata"
+                            },
+                            "8-ES-init":{
+                                "command": {"Fn::Join": [ " ", [
+                                    "/data/moloch/db/safeinit.sh",
+                                    {"Fn::Join": [
+                                        "",
+                                        [
+                                            "https://",
+                                            {"Fn::GetAtt": ["ElasticSearchDomain", "DomainEndpoint"]}
+                                        ]
+                                    ] },
+                                    {"Ref": "AdminUser"},
+                                    {"Ref": "AdminPassword"}
+                                ] ] }
+                            }                            
+                        },
+                        "services": {
+                            "sysvinit": {
+                                "molochcapture": {
+                                    "enabled": "true",
+                                    "ensureRunning": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "LaunchTemplateData": {
+                    "ImageId": { "Ref": "LatestAmiId" },
+                    "IamInstanceProfile": {
+                        "Name": { "Ref": "CaptureInstanceProfile" }
+                    },
+                    "InstanceType": { "Ref": "CaptureInstanceType" },
+                    "KeyName": { "Ref": "Keypair" },
+                    "SecurityGroupIds": [
+                        {
+                            "Ref": "CaptureInstanceSecurityGroup"
+                        }
+                    ],
+                    "UserData": {
+                        "Fn::Base64": {
+                            "Fn::Join": [
+                                "\n",
+                                [
+                                    "#!/bin/bash -xe",
+                                    "yum install -y aws-cfn-bootstrap",
+                                    {
+                                        "Fn::Join": [
+                                            " ",
+                                            [
+                                                "/opt/aws/bin/cfn-init -v -c configure-all",
+                                                "--stack",
+                                                {
+                                                    "Ref": "AWS::StackName"
+                                                },
+                                                "--resource LaunchTemplate",
+                                                "--region",
+                                                {
+                                                    "Ref": "AWS::Region"
+                                                }
+                                            ]
+                                        ]
+                                    },
+                                    {
+                                        "Fn::Join": [
+                                            " ",
+                                            [
+                                                "/opt/aws/bin/cfn-signal",
+                                                "--stack",
+                                                {
+                                                    "Ref": "AWS::StackName"
+                                                },
+                                                " --region ",
+                                                {
+                                                    "Ref": "AWS::Region"
+                                                },
+                                                "--resource AutoScalingGroup"
+                                            ]
+                                        ]
+                                    }
+                                ]
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "ViewerLBSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enable access to HTTP and HTTPS",
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": {
+                            "Ref": "HTTPSLocation"
+                        },
+                        "FromPort": 443,
+                        "IpProtocol": "tcp",
+                        "ToPort": 443
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "HTTPSLocation"
+                        },
+                        "FromPort": 80,
+                        "IpProtocol": "tcp",
+                        "ToPort": 80
+                    }
+
+                ],
+                "VpcId": { "Ref": "VPC" }
+            }
+        },
+        "ViewerInstanceSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enable access to SSH and Moloch viewer port 8005",
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": {
+                            "Ref": "SSHLocation"
+                        },
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "SourceSecurityGroupId": {
+                            "Ref": "ViewerLBSecurityGroup"
+                        },
+                        "FromPort": 8005,
+                        "IpProtocol": "tcp",
+                        "ToPort": 8005
+                    }
+                ],
+                "VpcId": { "Ref": "VPC" }
+            }
+        },
+        "CaptureInstanceSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enable access to SSH, VXLAN and Moloch viewer port 8005",
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": {
+                            "Ref": "SSHLocation"
+                        },
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "VXLANLocation"
+                        },
+                        "FromPort": 4789,
+                        "IpProtocol": "udp",
+                        "ToPort": 4789
+                    }
+                ],
+                "VpcId": { "Ref": "VPC" }
+            }
+        }
+    },
+
+    "Outputs": {
+        "S3Bucket": {
+            "Description": "S3 bucket for packet captures",
+            "Value": { "Ref": "S3Bucket"}
+        },
+        "MirrorTarget": {
+            "Description": "VPC Traffic Mirror Target",
+            "Value": { "Ref": "TrafficMirrorTarget"}
+        },
+        "ViewerURL": {
+            "Description": "Moloch Viewer URL",
+            "Value": { "Fn::Join": ["",
+                ["https://", {"Fn::GetAtt": ["ViewerLoadBalancer", "DNSName"] } 
+                ] ] 
+            }
+        }
+    }
+}
