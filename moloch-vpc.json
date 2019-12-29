@@ -466,7 +466,6 @@
         },
         "ESInstance": {
             "Type": "AWS::EC2::Instance",
-            "DependsOn": ["PrivateSubnet1RouteTableAssociation", "InternetGatewayAttachment"],
             "Properties": {
                 "LaunchTemplate":{
                     "LaunchTemplateId": {"Ref": "ESLaunchTemplate"},
@@ -745,8 +744,8 @@
                                     "/*"
                                 ]
                             ] },
-                            {"Fn::Sub": "arn:aws:s3:::repo.${AWS::Region}.amazonaws.com"},
-                            {"Fn::Sub": "arn:aws:s3:::repo.${AWS::Region}.amazonaws.com/*"}
+                            "arn:aws:s3:::packages.*.amazonaws.com/*",
+                            "arn:aws:s3:::repo.*.amazonaws.com/*"
                         ]
                     } ]
                 },
