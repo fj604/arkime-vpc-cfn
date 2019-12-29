@@ -765,7 +765,7 @@
         },
         "ViewerAutoScalingGroup": {
             "Type" : "AWS::AutoScaling::AutoScalingGroup",
-            "DependsOn": "CaptureAutoScalingGroup",
+            "DependsOn": "ESInitInstance",
             "Properties" : {
                 "VPCZoneIdentifier": [
                     {"Ref": "PrivateSubnet1"},
@@ -803,6 +803,7 @@
         },
         "CaptureAutoScalingGroup": {
             "Type" : "AWS::AutoScaling::AutoScalingGroup",
+            "DependsOn": "ESInitInstance",
             "Properties" : {
                 "VPCZoneIdentifier": [
                     {"Ref": "PrivateSubnet1"},
@@ -1092,29 +1093,6 @@
                                     {"Ref": "S2SPassword"},
                                     "yes"
                                 ] ] }
-                            },
-                            "/data/moloch/db/safeinit.sh": {
-                                "content": { "Fn::Join": [ "\n", [
-                                    "delay=$RANDOM",
-                                    "let 'delay %= 30'",
-                                    "echo \"Sleeping for $delay seconds...\"",
-                                    "sleep $delay",
-                                    "echo 'Checking ES URL:' $1",
-                                    "if /data/moloch/db/db.pl $1 info 2>/dev/null | grep 'DB Version' | grep '\\-1' >/dev/null",
-                                    "then",
-                                    "    echo 'ES running but not initialised, initialising...'",
-                                    "    /data/moloch/db/db.pl $1 init && /data/moloch/bin/moloch_add_user.sh \"$2\" \"Admin User\" \"$3\" --admin",
-                                    "    exit $?",
-                                    "elif /data/moloch/db/db.pl $1 info >/dev/null 2>&1",
-                                    "then",
-                                    "    echo 'ES running and initialised. Nothing to do.'",
-                                    "    exit 0",
-                                    "else",
-                                    "    echo 'ES not reachable'",
-                                    "    exit 1",
-                                    "fi"
-                                ] ] },
-                                "mode": "000700"
                             }
                         },
                         "commands": {
@@ -1153,21 +1131,7 @@
                             },
                             "7-chmod-suricata-logs": {
                                 "command": "chmod 755 /var/log/suricata"
-                            },
-                            "8-ES-init":{
-                                "command": {"Fn::Join": [ " ", [
-                                    "/data/moloch/db/safeinit.sh",
-                                    {"Fn::Join": [
-                                        "",
-                                        [
-                                            "https://",
-                                            {"Fn::GetAtt": ["ElasticSearchDomain", "DomainEndpoint"]}
-                                        ]
-                                    ] },
-                                    {"Ref": "AdminUser"},
-                                    {"Ref": "AdminPassword"}
-                                ] ] }
-                            }                            
+                            }
                         },
                         "services": {
                             "sysvinit": {
@@ -1237,6 +1201,159 @@
                                 ]
                             ]
                         }
+                    }
+                }
+            }
+        },
+        "ESInitInstance": {
+            "Type": "AWS::EC2::Instance",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "configSets": {
+                        "configure-all": [
+                            "install-moloch-dependencies",
+                            "install-moloch"
+                        ]
+                    },
+                    "install-moloch-dependencies": {
+                        "packages": {
+                            "yum": {
+                                "libyaml-devel": [],
+                                "perl-JSON": [],
+                                "perl-libwww-perl": [],
+                                "perl-LWP-Protocol-https": []
+                            }
+                        }
+                    },
+                    "install-moloch": {
+                        "packages": {
+                            "rpm": {
+                                "moloch": {"Ref": "MolochDownloadURL"}
+                            }
+                        },
+                        "files": {
+                            "/data/moloch/Configure-answers": {
+                                "content": { "Fn::Join": [ "\n", [
+                                    "eth0",
+                                    "no",
+                                    {"Fn::Join": [
+                                        "",
+                                        [
+                                            "https://",
+                                            {"Fn::GetAtt": ["ElasticSearchDomain", "DomainEndpoint"]}
+                                        ]
+                                    ] },
+                                    {"Ref": "S2SPassword"},
+                                    "yes"
+                                ] ] }
+                            },
+                            "/data/moloch/db/safeinit.sh": {
+                                "content": { "Fn::Join": [ "\n", [
+                                    "echo 'Checking ES URL:' $1",
+                                    "if /data/moloch/db/db.pl $1 info 2>/dev/null | grep 'DB Version' | grep '\\-1' >/dev/null",
+                                    "then",
+                                    "    echo 'ES running but not initialised, initialising...'",
+                                    "    /data/moloch/db/db.pl $1 init && /data/moloch/bin/moloch_add_user.sh \"$2\" \"Admin User\" \"$3\" --admin",
+                                    "    exit $?",
+                                    "elif /data/moloch/db/db.pl $1 info >/dev/null 2>&1",
+                                    "then",
+                                    "    echo 'ES running and initialised. Nothing to do.'",
+                                    "    exit 0",
+                                    "else",
+                                    "    echo 'ES not reachable'",
+                                    "    exit 1",
+                                    "fi"
+                                ] ] },
+                                "mode": "000700"
+                            }
+                        },
+                        "commands": {
+                            "1-remove-yum-prompt": {
+                                "command": "sed -i \"s/yum install/yum -y install/g\" /data/moloch/bin/Configure" 
+                            },
+                            "2-configure-moloch": {
+                                "command": "/data//moloch/bin/Configure < /data/moloch/Configure-answers"
+                            },
+                            "8-ES-init":{
+                                "command": {"Fn::Join": [ " ", [
+                                    "/data/moloch/db/safeinit.sh",
+                                    {"Fn::Join": [
+                                        "",
+                                        [
+                                            "https://",
+                                            {"Fn::GetAtt": ["ElasticSearchDomain", "DomainEndpoint"]}
+                                        ]
+                                    ] },
+                                    {"Ref": "AdminUser"},
+                                    {"Ref": "AdminPassword"}
+                                ] ] }
+                            }                            
+                        },
+                        "services": {
+                            "sysvinit": {
+                                "molochcapture": {
+                                    "enabled": "true",
+                                    "ensureRunning": "true"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "ImageId": { "Ref": "LatestAmiId" },
+                "InstanceType": "t3.micro",
+                "KeyName": { "Ref": "Keypair" },
+                "SecurityGroupIds": [
+                    {
+                        "Ref": "CaptureInstanceSecurityGroup"
+                    }
+                ],
+                "InstanceInitiatedShutdownBehavior": "terminate",
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "\n",
+                            [
+                                "#!/bin/bash -xe",
+                                "yum install -y aws-cfn-bootstrap",
+                                {
+                                    "Fn::Join": [
+                                        " ",
+                                        [
+                                            "/opt/aws/bin/cfn-init -v -c configure-all",
+                                            "--stack",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "--resource CaptureLaunchTemplate",
+                                            "--region",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            }
+                                        ]
+                                    ]
+                                },
+                                {
+                                    "Fn::Join": [
+                                        " ",
+                                        [
+                                            "/opt/aws/bin/cfn-signal",
+                                            "--stack",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "--resource ESInitInstance"
+                                        ]
+                                    ]
+                                },
+                                "poweroff"
+                            ]
+                        ]
                     }
                 }
             }
