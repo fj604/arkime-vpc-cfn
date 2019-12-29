@@ -688,7 +688,13 @@
                     {"Ref": "PrivateSubnet1"},
                     {"Ref": "PrivateSubnet2"}
                 ],
-                "Type": "network"
+                "Type": "network",
+                "LoadBalancerAttributes": [
+                    {
+                        "Key": "load_balancing.cross_zone.enabled",
+                        "Value": "true"
+                    }
+                ]
             }
         },
         "TrafficMirrorTarget": {
