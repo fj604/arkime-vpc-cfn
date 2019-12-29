@@ -1274,7 +1274,7 @@
                             "2-configure-moloch": {
                                 "command": "/data//moloch/bin/Configure < /data/moloch/Configure-answers"
                             },
-                            "8-ES-init":{
+                            "3-ES-init":{
                                 "command": {"Fn::Join": [ " ", [
                                     "/data/moloch/db/safeinit.sh",
                                     {"Fn::Join": [
@@ -1302,7 +1302,7 @@
             },
             "Properties": {
                 "ImageId": { "Ref": "LatestAmiId" },
-                "InstanceType": "t3.micro",
+                "InstanceType": "t3.small",
                 "KeyName": { "Ref": "Keypair" },
                 "SecurityGroupIds": [
                     {
@@ -1327,7 +1327,7 @@
                                             {
                                                 "Ref": "AWS::StackName"
                                             },
-                                            "--resource CaptureLaunchTemplate",
+                                            "--resource ESInitInstance",
                                             "--region",
                                             {
                                                 "Ref": "AWS::Region"
