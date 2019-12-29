@@ -422,7 +422,7 @@
                                 "\n",
                                 [
                                     "#!/bin/bash -xe",
-                                    "yum install -y aws-cfn-bootstrap",
+                                    "yum install -y java-openjdk-headless aws-cfn-bootstrap",
                                     {
                                         "Fn::Join": [
                                             " ",
