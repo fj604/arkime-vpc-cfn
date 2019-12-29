@@ -507,7 +507,7 @@
             "Properties": {
                 "RouteTableId": {"Ref": "PrivateRouteTable1"},
                 "DestinationCidrBlock": "0.0.0.0/0",
-                "GatewayId": {"Ref": "InternetGateway"}
+                "NatGatewayId": {"Ref": "NatGateway1"}
             }
         },
         "DefaultPrivateRoute2": {
@@ -515,7 +515,7 @@
             "Properties": {
                 "RouteTableId": {"Ref": "PrivateRouteTable2"},
                 "DestinationCidrBlock": "0.0.0.0/0",
-                "GatewayId": {"Ref": "InternetGateway"}
+                "NatGatewayId": {"Ref": "NatGateway2"}
             }
         },
         "PrivateSubnet1RouteTableAssociation": {
@@ -1246,7 +1246,7 @@
                                                 {
                                                     "Ref": "AWS::Region"
                                                 },
-                                                "--resource AutoScalingGroup"
+                                                "--resource CaptureAutoScalingGroup"
                                             ]
                                         ]
                                     }
