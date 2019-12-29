@@ -507,7 +507,7 @@
             "Properties": {
                 "RouteTableId": {"Ref": "PrivateRouteTable1"},
                 "DestinationCidrBlock": "0.0.0.0/0",
-                "NatGatewayId": {"Ref": "NatGateway1"}
+                "GatewayId": {"Ref": "InternetGateway"}
             }
         },
         "DefaultPrivateRoute2": {
@@ -515,7 +515,7 @@
             "Properties": {
                 "RouteTableId": {"Ref": "PrivateRouteTable2"},
                 "DestinationCidrBlock": "0.0.0.0/0",
-                "NatGatewayId": {"Ref": "NatGateway2"}
+                "GatewayId": {"Ref": "InternetGateway"}
             }
         },
         "PrivateSubnet1RouteTableAssociation": {
@@ -803,7 +803,8 @@
             },
             "CreationPolicy": {
                 "ResourceSignal": {
-                    "Count": {"Ref": "ViewerMinSize"}
+                    "Count": {"Ref": "ViewerMinSize"},
+                    "Timeout": "PT15M"
                 }
             }
         },
