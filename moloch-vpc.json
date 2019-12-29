@@ -1097,7 +1097,7 @@
                             "/data/moloch/db/safeinit.sh": {
                                 "content": { "Fn::Join": [ "\n", [
                                     "delay=$RANDOM",
-                                    "let 'delay %= 20'",
+                                    "let 'delay %= 30'",
                                     "echo \"Sleeping for $delay seconds...\"",
                                     "sleep $delay",
                                     "echo 'Checking ES URL:' $1",
