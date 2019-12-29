@@ -235,7 +235,9 @@
         "ESInstanceCount": {
             "Type": "Number",
             "Description": "Number of ElasticSearch instances",
-            "Default": 1
+            "Default": 2,
+            "ConstraintDescription": "must be 2 or larger",
+            "MinValue": 2
         },
         "ESVolumeSize": {
             "Type": "Number",
@@ -338,135 +340,68 @@
                 "VpcId": { "Ref": "VPC" }
             }
         },
-        "ESInstanceSecurityGroup": {
-            "Type": "AWS::EC2::SecurityGroup",
+        "NatGateway1EIP": {
+            "Type": "AWS::EC2::EIP",
+            "DependsOn": "InternetGatewayAttachment",
             "Properties": {
-                "GroupDescription": "Enable ElasticSearch port 443",
-                "SecurityGroupIngress": [
-                    {
-                        "CidrIp": {
-                            "Ref": "SSHLocation"
-                        },
-                        "FromPort": 22,
-                        "IpProtocol": "tcp",
-                        "ToPort": 22
-                        
-                    },
-                    {
-                        "CidrIp": {
-                            "Ref": "PrivateSubnet1CIDR"
-                        },
-                        "FromPort": 9200,
-                        "IpProtocol": "tcp",
-                        "ToPort": 9200
-                    },
-                    {
-                        "CidrIp": {
-                            "Ref": "PrivateSubnet2CIDR"
-                        },
-                        "FromPort": 9200,
-                        "IpProtocol": "tcp",
-                        "ToPort": 9200
-                    }
-                ],
-                "VpcId": { "Ref": "VPC" }
+                "Domain": "vpc"
             }
         },
-        "ESLaunchTemplate": {
-            "Type": "AWS::EC2::LaunchTemplate",
-            "Metadata": {
-                "AWS::CloudFormation::Init": {
-                    "configSets": {
-                        "configure-all": [
-                            "install-es"
-                        ]
-                    },
-                    "install-es": {
-                        "packages": {
-                            "rpm": {
-                                "elasticsearch": "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-oss-7.5.1-x86_64.rpm"
-                            }
-                        },
-                        "services": {
-                            "sysvinit": {
-                                "elasticsearch": {
-                                    "enabled": "true",
-                                    "ensureRunning": "true"
-                                }
-                            }
-                        }
-                    }
-                }
-            },
+        "NatGateway2EIP": {
+            "Type": "AWS::EC2::EIP",
+            "DependsOn": "InternetGatewayAttachment",
             "Properties": {
-                "LaunchTemplateData": {
-                    "ImageId": { "Ref": "LatestAmiId" },
-                    "InstanceType": "t3.small" ,
-                    "KeyName": { "Ref": "Keypair" },
-                    "SecurityGroupIds": [
+                "Domain": "vpc"
+            }
+        },
+        "NatGateway1": {
+            "Type": "AWS::EC2::NatGateway",
+            "Properties": {
+                "AllocationId": {"Fn::GetAtt":["NatGateway1EIP", "AllocationId"]},
+                "SubnetId": {"Ref": "PublicSubnet1"}
+            }
+        },
+        "NatGateway2": {
+            "Type": "AWS::EC2::NatGateway",
+            "Properties": {
+                "AllocationId": {"Fn::GetAtt":["NatGateway2EIP", "AllocationId"]},
+                "SubnetId": {"Ref": "PublicSubnet2"}
+            }
+        },
+        "ElasticSearchDomain": {
+            "Type" : "AWS::Elasticsearch::Domain",
+            "Properties" : {
+                "AccessPolicies": {
+                    "Version": "2012-10-17",
+                    "Statement": [
                         {
-                            "Ref": "ESInstanceSecurityGroup"
+                            "Effect": "Allow",
+                            "Principal": {
+                              "AWS": "*"
+                            },
+                            "Action": "es:*",
+                            "Resource": "arn:aws:es:*"
                         }
-                    ],
-                    "UserData": {
-                        "Fn::Base64": {
-                            "Fn::Join": [
-                                "\n",
-                                [
-                                    "#!/bin/bash -xe",
-                                    "yum install -y java-openjdk-headless aws-cfn-bootstrap",
-                                    {
-                                        "Fn::Join": [
-                                            " ",
-                                            [
-                                                "/opt/aws/bin/cfn-init -v -c configure-all",
-                                                "--stack",
-                                                {
-                                                    "Ref": "AWS::StackName"
-                                                },
-                                                "--resource ESLaunchTemplate",
-                                                "--region",
-                                                {
-                                                    "Ref": "AWS::Region"
-                                                }
-                                            ]
-                                        ]
-                                    },
-                                    {
-                                        "Fn::Join": [
-                                            " ",
-                                            [
-                                                "/opt/aws/bin/cfn-signal",
-                                                "--stack",
-                                                {
-                                                    "Ref": "AWS::StackName"
-                                                },
-                                                " --region ",
-                                                {
-                                                    "Ref": "AWS::Region"
-                                                },
-                                                "--resource ESInstance"
-                                            ]
-                                        ]
-                                    }
-                                ]
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        "ESInstance": {
-            "Type": "AWS::EC2::Instance",
-            "Properties": {
-                "LaunchTemplate":{
-                    "LaunchTemplateId": {"Ref": "ESLaunchTemplate"},
-                    "Version": "1"
+                    ]
                 },
-                "SubnetId": {"Ref": "PrivateSubnet1"}       
-            },
-            "CreationPolicy": {
-                "ResourceSignal": {
+                "ElasticsearchClusterConfig" : {
+                    "InstanceCount": {"Ref": "ESInstanceCount"},
+                    "InstanceType": {"Ref": "ESInstanceType"},
+                    "ZoneAwarenessEnabled": true
+                },
+                "EBSOptions": {
+                    "EBSEnabled": true,
+                    "VolumeSize": {"Ref": "ESVolumeSize"}
+                },
+                "ElasticsearchVersion" : {"Ref": "ESVersion"},
+                "VPCOptions" : {
+                    "SecurityGroupIds": [
+                        { "Ref": "ESSecurityGroup" }
+                    ],
+                    "SubnetIds": [
+                        {"Ref": "PrivateSubnet1"},
+                        {"Ref": "PrivateSubnet2"}
+                    ]
                 }
             }
         },
@@ -964,7 +899,7 @@
                                         "",
                                         [
                                             "https://",
-                                            {"Fn::GetAtt": ["ESInstance", "PublicIp"]}
+                                            {"Fn::GetAtt": ["ElasticSearchDomain", "DomainEndpoint"]}
                                         ]
                                     ] },
                                     {"Ref": "S2SPassword"},
@@ -1145,8 +1080,7 @@
                                         "",
                                         [
                                             "https://",
-                                            {"Fn::GetAtt": ["ESInstance", "PrivateIp"]},
-                                            ":9200"
+                                            {"Fn::GetAtt": ["ElasticSearchDomain", "DomainEndpoint"]}
                                         ]
                                     ] },
                                     {"Ref": "S2SPassword"},
@@ -1237,8 +1171,7 @@
                                         "",
                                         [
                                             "https://",
-                                            {"Fn::GetAtt": ["ESInstance", "PrivateIp"]},
-                                            ":9200"
+                                            {"Fn::GetAtt": ["ElasticSearchDomain", "DomainEndpoint"]}
                                         ]
                                     ] },
                                     {"Ref": "AdminUser"},
