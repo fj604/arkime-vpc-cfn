@@ -874,9 +874,17 @@
                 "AWS::CloudFormation::Init": {
                     "configSets": {
                         "configure-all": [
+                            "install-epel",
                             "install-moloch-dependencies",
                             "install-moloch"
                         ]
+                    },
+                    "install-epel": {
+                        "commands": {
+                            "install-epel-extra": {
+                                "command": "amazon-linux-extras install epel -y"
+                            }
+                        }
                     },
                     "install-moloch-dependencies": {
                         "packages": {
