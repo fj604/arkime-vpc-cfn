@@ -744,7 +744,9 @@
                                     {"Fn::GetAtt": ["S3Bucket", "Arn"]},
                                     "/*"
                                 ]
-                            ] }
+                            ] },
+                            {"Fn::Sub": "arn:aws:s3:::repo.${AWS::Region}.amazonaws.com"},
+                            {"Fn::Sub": "arn:aws:s3:::repo.${AWS::Region}.amazonaws.com/*"}
                         ]
                     } ]
                 },
