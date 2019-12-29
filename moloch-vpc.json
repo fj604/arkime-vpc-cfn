@@ -738,14 +738,7 @@
                         "Principal": "*",
                         "Action": ["s3:*"],
                         "Resource": [
-                            {"Fn::Join": [
-                                "", [
-                                    {"Fn::GetAtt": ["S3Bucket", "Arn"]},
-                                    "/*"
-                                ]
-                            ] },
-                            "arn:aws:s3:::packages.*.amazonaws.com/*",
-                            "arn:aws:s3:::repo.*.amazonaws.com/*"
+                            "*"
                         ]
                     } ]
                 },
