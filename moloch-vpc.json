@@ -226,7 +226,7 @@
         },
         "ESInstanceType": {
             "Type": "String",
-            "Default": "t2.small.elasticsearch",
+            "Default": "t2.medium.elasticsearch",
             "AllowedValues": [
                 "t2.small.elasticsearch",
                 "t2.medium.elasticsearch",
@@ -1288,14 +1288,6 @@
                                     {"Ref": "AdminPassword"}
                                 ] ] }
                             }                            
-                        },
-                        "services": {
-                            "sysvinit": {
-                                "molochcapture": {
-                                    "enabled": "true",
-                                    "ensureRunning": "true"
-                                }
-                            }
                         }
                     }
                 }
@@ -1356,6 +1348,10 @@
                             ]
                         ]
                     }
+                }
+            },
+            "CreationPolicy": {
+                "ResourceSignal": {
                 }
             }
         },
