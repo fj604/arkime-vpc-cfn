@@ -319,7 +319,7 @@
             "Type": "AWS::EC2::VPC",
             "Properties": {
                 "CidrBlock": {"Ref": "VpcCIDR"},
-                "EnableDnsHostnames": true
+                "EnableDnsHostnames": true               
             }
         },
         "ESSecurityGroup": {
@@ -676,7 +676,8 @@
                 },
                 "ServiceName": { "Fn::Sub": "com.amazonaws.${AWS::Region}.s3" },
                 "RouteTableIds": [{"Ref": "PrivateRouteTable1"}, {"Ref": "PrivateRouteTable2"}],
-                "VpcId": {"Ref": "VPC"}
+                "VpcId": {"Ref": "VPC"},
+                "PrivateDnsEnabled": true
             }
         },
         "NotificationTopic": {
