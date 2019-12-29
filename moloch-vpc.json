@@ -378,16 +378,8 @@
                 "AWS::CloudFormation::Init": {
                     "configSets": {
                         "configure-all": [
-                            "install-es-dependencies",
                             "install-es"
                         ]
-                    },
-                    "install-es-dependencies": {
-                        "packages": {
-                            "yum": {
-                                "java-openjdk-headless": []
-                            }
-                        }
                     },
                     "install-es": {
                         "packages": {
