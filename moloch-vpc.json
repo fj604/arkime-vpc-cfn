@@ -1344,6 +1344,10 @@
         }
     },
     "Outputs": {
+        "VPC": {
+            "Description": "VPC",
+            "Value": { "Ref": "VPC"}
+        },
         "S3Bucket": {
             "Description": "S3 bucket for packet captures",
             "Value": { "Ref": "S3Bucket"}
