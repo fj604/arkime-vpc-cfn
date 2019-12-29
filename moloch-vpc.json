@@ -432,7 +432,7 @@
                                                 {
                                                     "Ref": "AWS::StackName"
                                                 },
-                                                "--resource LaunchTemplate",
+                                                "--resource ESLaunchTemplate",
                                                 "--region",
                                                 {
                                                     "Ref": "AWS::Region"
@@ -1045,7 +1045,7 @@
                                                 {
                                                     "Ref": "AWS::StackName"
                                                 },
-                                                "--resource LaunchTemplate",
+                                                "--resource ViewerLaunchTemplate",
                                                 "--region",
                                                 {
                                                     "Ref": "AWS::Region"
@@ -1294,7 +1294,7 @@
                                                 {
                                                     "Ref": "AWS::StackName"
                                                 },
-                                                "--resource LaunchTemplate",
+                                                "--resource CaptureLaunchTemplate",
                                                 "--region",
                                                 {
                                                     "Ref": "AWS::Region"
