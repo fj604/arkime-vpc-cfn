@@ -445,8 +445,7 @@
                     0, { "Fn::GetAZs" : ""}
                     ]
                 },
-                "CidrBlock": {"Ref": "PrivateSubnet1CIDR"},
-                "MapPublicIpOnLaunch": true
+                "CidrBlock": {"Ref": "PrivateSubnet1CIDR"}
             }
         },
         "PrivateSubnet2": {
@@ -457,8 +456,7 @@
                     1, { "Fn::GetAZs" : ""}
                     ]
                 },
-                "CidrBlock": {"Ref": "PrivateSubnet2CIDR"},
-                "MapPublicIpOnLaunch": true
+                "CidrBlock": {"Ref": "PrivateSubnet2CIDR"}
             }
         },
         "PublicRouteTable": {
@@ -507,7 +505,7 @@
             "Properties": {
                 "RouteTableId": {"Ref": "PrivateRouteTable1"},
                 "DestinationCidrBlock": "0.0.0.0/0",
-                "GatewayId": {"Ref": "InternetGateway"}
+                "NatGatewayId": {"Ref": "NatGateway1"}
             }
         },
         "DefaultPrivateRoute2": {
@@ -515,7 +513,7 @@
             "Properties": {
                 "RouteTableId": {"Ref": "PrivateRouteTable2"},
                 "DestinationCidrBlock": "0.0.0.0/0",
-                "GatewayId": {"Ref": "InternetGateway"}
+                "NatGatewayId": {"Ref": "NatGateway2"}
             }
         },
         "PrivateSubnet1RouteTableAssociation": {
@@ -803,8 +801,7 @@
             },
             "CreationPolicy": {
                 "ResourceSignal": {
-                    "Count": {"Ref": "ViewerMinSize"},
-                    "Timeout": "PT15M"
+                    "Count": {"Ref": "ViewerMinSize"}
                 }
             }
         },
@@ -945,7 +942,10 @@
                             },
                             "6.3-set-viewer-plugin": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default viewerPlugins writer-s3/index.js"
-                            }                            
+                            },
+                            "6.4-set-pcap-write-method": {
+                                "command": "crudini --set /data/moloch/etc/config.ini default pcapWriteMethod s3"
+                            }
                         },
                         "services": {
                             "sysvinit": {
@@ -1159,10 +1159,10 @@
                             "6.3-set-viewer-plugin": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default viewerPlugins writer-s3/index.js"
                             },
-                            "6.5-set-pcap-write-method": {
+                            "6.4-set-pcap-write-method": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default pcapWriteMethod s3"
                             },
-                            "6.6-set-maxFileTimeM": {
+                            "6.5-set-maxFileTimeM": {
                                 "command": {"Fn::Join": [" ", [
                                     "crudini --set /data/moloch/etc/config.ini default maxFileTimeM",
                                     { "Ref": "S3FlushInterval" }
