@@ -1,7 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
 
-
     "Description": "Deploy clustered Moloch packet capture system enhanced with Suricata IDS",
 
     "Metadata": {
@@ -22,7 +21,7 @@
                 {
                     "Label": {"default": "Moloch settings"},
                     "Parameters": ["MolochDownloadURL",
-                        "AdminUser", "AdminPassword", "S2SPassword", "S3FMaxObjectSizeGB", "S3FlushInterval"]
+                        "AdminUser", "AdminPassword", "S2SPassword", "S3FMaxObjectSizeGB", "S3FlushInterval", "S3ExpireDays"]
                 },
                 {
                     "Label": {"default": "Auto-scaling settings"},
@@ -55,6 +54,7 @@
                 "S2SPassword": {"default": "S2S password"},
                 "S3FMaxObjectSizeGB": {"default": "Maximum packet capture size"},
                 "S3FlushInterval": {"default": "New packet capture object interval"},
+                "S3ExpireDays": {"default": "Days to keep packet captures"},
                 "ViewerMinSize": {"default": "Minumum number of viewer instances"},
                 "ViewerMaxSize": {"default": "Maximum number of viewer instances"},
                 "CaptureMinSize": {"default": "Minumum number of capture instances"},
@@ -120,6 +120,13 @@
             "ConstraintDescription": "must be between 0.01 and 1024",
             "MinValue": 0.01,
             "MaxValue": 1024
+        },
+        "S3ExpireDays": {
+            "Type": "Number",
+            "Description": "Expire packet captures from S3 fter this many days; 0 means never expire",
+            "Default": 0,
+            "ConstraintDescription": "must be 0 or more",
+            "MinValue": 0
         },
         "ViewerMinSize": {
             "Type": "Number",
@@ -927,24 +934,19 @@
                                 "command": "/data//moloch/bin/Configure < /data/moloch/Configure-answers"
                             },
                             "6.1-set-S3-region": {
-                                "command": {"Fn::Join": [" ", [
-                                    "crudini --set /data/moloch/etc/config.ini default s3Region",
-                                    { "Ref": "AWS::Region" }
-                                ] ]
-                                }
+                                "command": {"Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3Region ${AWS::Region}"}
                             },
                             "6.2-set-S3-bucket": {
-                                "command": {"Fn::Join": [" ", [
-                                    "crudini --set /data/moloch/etc/config.ini default s3Bucket",
-                                    { "Ref": "S3Bucket" }
-                                ] ]
-                                }
+                                "command": {"Fn::Sub":  "crudini --set /data/moloch/etc/config.ini default s3Bucket ${S3Bucket}"}
                             },
                             "6.3-set-viewer-plugin": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default viewerPlugins writer-s3/index.js"
                             },
                             "6.4-set-pcap-write-method": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default pcapWriteMethod s3"
+                            },
+                            "6.5-set-S3-ExpireDays": {
+                                "command": {"Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3ExpireDays ${S3ExpireDays}"}
                             }
                         },
                         "services": {
@@ -1143,18 +1145,10 @@
                                 "command": "crudini --set /data/moloch/etc/config.ini default bpf \"udp port 4789\""
                             },
                             "6.1-set-S3-region": {
-                                "command": {"Fn::Join": [" ", [
-                                    "crudini --set /data/moloch/etc/config.ini default s3Region",
-                                    { "Ref": "AWS::Region" }
-                                ] ]
-                                }
+                                "command": {"Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3Region ${AWS::Region}"}
                             },
                             "6.2-set-S3-bucket": {
-                                "command": {"Fn::Join": [" ", [
-                                    "crudini --set /data/moloch/etc/config.ini default s3Bucket",
-                                    { "Ref": "S3Bucket" }
-                                ] ]
-                                }
+                                "command": {"Fn::Sub":  "crudini --set /data/moloch/etc/config.ini default s3Bucket ${S3Bucket}"}
                             },
                             "6.3-set-viewer-plugin": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default viewerPlugins writer-s3/index.js"
@@ -1163,18 +1157,10 @@
                                 "command": "crudini --set /data/moloch/etc/config.ini default pcapWriteMethod s3"
                             },
                             "6.5-set-maxFileTimeM": {
-                                "command": {"Fn::Join": [" ", [
-                                    "crudini --set /data/moloch/etc/config.ini default maxFileTimeM",
-                                    { "Ref": "S3FlushInterval" }
-                                ] ]
-                                }
+                                "command": {"Fn::Sub": "crudini --set /data/moloch/etc/config.ini default maxFileTimeM ${S3FlushInterval}"}
                             },
                             "6.7-set-maxFileSizeG": {
-                                "command": {"Fn::Join": [" ", [
-                                    "crudini --set /data/moloch/etc/config.ini default maxFileSizeG",
-                                    { "Ref": "S3FMaxObjectSizeGB" }
-                                ] ]
-                                }
+                                "command": {"Fn::Sub": "crudini --set /data/moloch/etc/config.ini default maxFileSizeG ${S3FMaxObjectSizeGB}"}
                             },
                             "7-chmod-suricata-logs": {
                                 "command": "chmod 755 /var/log/suricata"
