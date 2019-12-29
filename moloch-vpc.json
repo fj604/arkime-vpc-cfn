@@ -466,6 +466,7 @@
         },
         "ESInstance": {
             "Type": "AWS::EC2::Instance",
+            "DependsOn": ["PrivateSubnet1RouteTableAssociation", "InternetGatewayAttachment"],
             "Properties": {
                 "LaunchTemplate":{
                     "LaunchTemplateId": {"Ref": "ESLaunchTemplate"},
