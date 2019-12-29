@@ -467,7 +467,10 @@
         "ESInstance": {
             "Type": "AWS::EC2::Instance",
             "Properties": {
-                "LaunchTemplate": {"Ref": "ESLaunchTemplate"},
+                "LaunchTemplate":{
+                    "LaunchTemplateId": {"Ref": "ESLaunchTemplate"},
+                    "Version": "1"
+                },
                 "SubnetId": {"Ref": "PrivateSubnet1"}       
             },
             "CreationPolicy": {
