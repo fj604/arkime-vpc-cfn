@@ -123,10 +123,10 @@
         },
         "S3ExpireDays": {
             "Type": "Number",
-            "Description": "Expire packet captures from S3 fter this many days; 0 means never expire",
-            "Default": 0,
-            "ConstraintDescription": "must be 0 or more",
-            "MinValue": 0
+            "Description": "Expire packet captures from S3 fter this many days",
+            "Default": 3660,
+            "ConstraintDescription": "must be 1 or more",
+            "MinValue": 1
         },
         "ViewerMinSize": {
             "Type": "Number",
@@ -1294,7 +1294,7 @@
             },
             "Properties": {
                 "ImageId": { "Ref": "LatestAmiId" },
-                "InstanceType": "t3.small",
+                "InstanceType": "t3.micro",
                 "KeyName": { "Ref": "Keypair" },
                 "SecurityGroupIds": [
                     {

@@ -21,6 +21,7 @@
                 "S2SPassword": "S2Spassword",
                 "S3FMaxObjectSizeGB": "4",
                 "S3FlushInterval": "1",
+                "S3ExpireDays": "3650",
                 "ViewerMinSize": "2",
                 "ViewerMaxSize": "2",
                 "CaptureMinSize": "2",
