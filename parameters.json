@@ -1,0 +1,33 @@
+{
+    "Parameters": {
+                "VpcCIDR": "192.168.250.0/24",
+                "PublicSubnet1CIDR":"192.168.250.0/26",
+                "PublicSubnet2CIDR": "192.168.250.64/26",
+                "PrivateSubnet1CIDR": "192.168.250.128/26",
+                "PrivateSubnet2CIDR": "192.168.250.192/26",
+                "VXLANLocation": "0.0.0.0/0",
+                "HTTPSLocation": "0.0.0.0/0",
+                "SSHLocation": "0.0.0.0/0",
+                "ESInstanceCount": "2",
+                "ESVolumeSize": "10",
+                "ESInstanceType": "r5.large.elasticsearch",
+                "ViewerInstanceType": "t3.small",
+                "CaptureInstanceType": "t3.small",
+                "Keypair": "AWSKey",
+                "LatestAmiId": "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2",
+                "MolochDownloadURL": "https://s3.amazonaws.com/files.molo.ch/moloch-master.centos7.x86_64.rpm",
+                "AdminUser": "admin",
+                "AdminPassword": "molpass",
+                "S2SPassword": "S2Spassword",
+                "S3FMaxObjectSizeGB": "4",
+                "S3FlushInterval": "1",
+                "S3ExpireDays": "3650",
+                "ViewerMinSize": "2",
+                "ViewerMaxSize": "2",
+                "CaptureMinSize": "2",
+                "CaptureMaxSize": "2",
+                "OperatorEMail": "noemail@noemail.com",
+                "CertificateArn": "arn:aws:acm:eu-west-2:865692964153:certificate/b23482df-7941-4ef5-9f03-898030bc7634"
+    }
+}
+

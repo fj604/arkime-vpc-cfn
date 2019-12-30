@@ -21,7 +21,7 @@
                 {
                     "Label": {"default": "Moloch settings"},
                     "Parameters": ["MolochDownloadURL",
-                        "AdminUser", "AdminPassword", "S2SPassword", "S3FMaxObjectSizeGB", "S3FlushInterval"]
+                        "AdminUser", "AdminPassword", "S2SPassword", "S3FMaxObjectSizeGB", "S3FlushInterval", "S3ExpireDays"]
                 },
                 {
                     "Label": {"default": "Auto-scaling settings"},
@@ -54,6 +54,7 @@
                 "S2SPassword": {"default": "S2S password"},
                 "S3FMaxObjectSizeGB": {"default": "Maximum packet capture size"},
                 "S3FlushInterval": {"default": "New packet capture object interval"},
+                "S3ExpireDays": {"default": "Days to keep packet captures"},
                 "ViewerMinSize": {"default": "Minumum number of viewer instances"},
                 "ViewerMaxSize": {"default": "Maximum number of viewer instances"},
                 "CaptureMinSize": {"default": "Minumum number of capture instances"},
@@ -119,6 +120,13 @@
             "ConstraintDescription": "must be between 0.01 and 1024",
             "MinValue": 0.01,
             "MaxValue": 1024
+        },
+        "S3ExpireDays": {
+            "Type": "Number",
+            "Description": "Expire packet captures from S3 fter this many days",
+            "Default": 3660,
+            "ConstraintDescription": "must be 1 or more",
+            "MinValue": 1
         },
         "ViewerMinSize": {
             "Type": "Number",
@@ -218,7 +226,7 @@
         },
         "ESInstanceType": {
             "Type": "String",
-            "Default": "t2.small.elasticsearch",
+            "Default": "t2.medium.elasticsearch",
             "AllowedValues": [
                 "t2.small.elasticsearch",
                 "t2.medium.elasticsearch",
@@ -234,7 +242,9 @@
         "ESInstanceCount": {
             "Type": "Number",
             "Description": "Number of ElasticSearch instances",
-            "Default": 1
+            "Default": 2,
+            "ConstraintDescription": "must be 2 or larger",
+            "MinValue": 2
         },
         "ESVolumeSize": {
             "Type": "Number",
@@ -309,7 +319,7 @@
             "Type": "AWS::EC2::VPC",
             "Properties": {
                 "CidrBlock": {"Ref": "VpcCIDR"},
-                "EnableDnsHostnames": true
+                "EnableDnsHostnames": true               
             }
         },
         "ESSecurityGroup": {
@@ -337,6 +347,34 @@
                 "VpcId": { "Ref": "VPC" }
             }
         },
+        "NatGateway1EIP": {
+            "Type": "AWS::EC2::EIP",
+            "DependsOn": "InternetGatewayAttachment",
+            "Properties": {
+                "Domain": "vpc"
+            }
+        },
+        "NatGateway2EIP": {
+            "Type": "AWS::EC2::EIP",
+            "DependsOn": "InternetGatewayAttachment",
+            "Properties": {
+                "Domain": "vpc"
+            }
+        },
+        "NatGateway1": {
+            "Type": "AWS::EC2::NatGateway",
+            "Properties": {
+                "AllocationId": {"Fn::GetAtt":["NatGateway1EIP", "AllocationId"]},
+                "SubnetId": {"Ref": "PublicSubnet1"}
+            }
+        },
+        "NatGateway2": {
+            "Type": "AWS::EC2::NatGateway",
+            "Properties": {
+                "AllocationId": {"Fn::GetAtt":["NatGateway2EIP", "AllocationId"]},
+                "SubnetId": {"Ref": "PublicSubnet2"}
+            }
+        },
         "ElasticSearchDomain": {
             "Type" : "AWS::Elasticsearch::Domain",
             "Properties" : {
@@ -355,7 +393,8 @@
                 },
                 "ElasticsearchClusterConfig" : {
                     "InstanceCount": {"Ref": "ESInstanceCount"},
-                    "InstanceType": {"Ref": "ESInstanceType"}
+                    "InstanceType": {"Ref": "ESInstanceType"},
+                    "ZoneAwarenessEnabled": true
                 },
                 "EBSOptions": {
                     "EBSEnabled": true,
@@ -427,34 +466,6 @@
                 "CidrBlock": {"Ref": "PrivateSubnet2CIDR"}
             }
         },
-        "NatGateway1EIP": {
-            "Type": "AWS::EC2::EIP",
-            "DependsOn": "InternetGatewayAttachment",
-            "Properties": {
-                "Domain": "vpc"
-            }
-        },
-        "NatGateway2EIP": {
-            "Type": "AWS::EC2::EIP",
-            "DependsOn": "InternetGatewayAttachment",
-            "Properties": {
-                "Domain": "vpc"
-            }
-        },
-        "NatGateway1": {
-            "Type": "AWS::EC2::NatGateway",
-            "Properties": {
-                "AllocationId": {"Fn::GetAtt":["NatGateway1EIP", "AllocationId"]},
-                "SubnetId": {"Ref": "PublicSubnet1"}
-            }
-        },
-        "NatGateway2": {
-            "Type": "AWS::EC2::NatGateway",
-            "Properties": {
-                "AllocationId": {"Fn::GetAtt":["NatGateway2EIP", "AllocationId"]},
-                "SubnetId": {"Ref": "PublicSubnet2"}
-            }
-        },
         "PublicRouteTable": {
             "Type": "AWS::EC2::RouteTable",
             "Properties": {
@@ -522,7 +533,7 @@
         "PrivateSubnet2RouteTableAssociation": {
             "Type": "AWS::EC2::SubnetRouteTableAssociation",
             "Properties": {
-                "RouteTableId": {"Ref": "PrivateRouteTable1"},
+                "RouteTableId": {"Ref": "PrivateRouteTable2"},
                 "SubnetId": {"Ref": "PrivateSubnet2"} 
             }
         },
@@ -647,8 +658,15 @@
             }
         },
         "S3Bucket": {
-            "Type": "AWS::S3::Bucket",
-            "DeletionPolicy": "Retain"
+            "Type": "AWS::S3::Bucket"
+        },
+        "S3Endpoint": {
+            "Type": "AWS::EC2::VPCEndpoint",
+            "Properties": {
+                "ServiceName": { "Fn::Sub": "com.amazonaws.${AWS::Region}.s3" },
+                "RouteTableIds": [{"Ref": "PrivateRouteTable1"}, {"Ref": "PrivateRouteTable2"}],
+                "VpcId": {"Ref": "VPC"}
+            }
         },
         "NotificationTopic": {
             "Type": "AWS::SNS::Topic",
@@ -664,7 +682,13 @@
                     {"Ref": "PrivateSubnet1"},
                     {"Ref": "PrivateSubnet2"}
                 ],
-                "Type": "network"
+                "Type": "network",
+                "LoadBalancerAttributes": [
+                    {
+                        "Key": "load_balancing.cross_zone.enabled",
+                        "Value": "true"
+                    }
+                ]
             }
         },
         "TrafficMirrorTarget": {
@@ -741,7 +765,7 @@
         },
         "ViewerAutoScalingGroup": {
             "Type" : "AWS::AutoScaling::AutoScalingGroup",
-            "DependsOn": "CaptureAutoScalingGroup",
+            "DependsOn": "ESInitInstance",
             "Properties" : {
                 "VPCZoneIdentifier": [
                     {"Ref": "PrivateSubnet1"},
@@ -779,6 +803,7 @@
         },
         "CaptureAutoScalingGroup": {
             "Type" : "AWS::AutoScaling::AutoScalingGroup",
+            "DependsOn": "ESInitInstance",
             "Properties" : {
                 "VPCZoneIdentifier": [
                     {"Ref": "PrivateSubnet1"},
@@ -843,9 +868,17 @@
                 "AWS::CloudFormation::Init": {
                     "configSets": {
                         "configure-all": [
+                            "install-epel",
                             "install-moloch-dependencies",
                             "install-moloch"
                         ]
+                    },
+                    "install-epel": {
+                        "commands": {
+                            "install-epel-extra": {
+                                "command": "amazon-linux-extras install epel -y"
+                            }
+                        }
                     },
                     "install-moloch-dependencies": {
                         "packages": {
@@ -891,22 +924,20 @@
                                 "command": "/data//moloch/bin/Configure < /data/moloch/Configure-answers"
                             },
                             "6.1-set-S3-region": {
-                                "command": {"Fn::Join": [" ", [
-                                    "crudini --set /data/moloch/etc/config.ini default s3Region",
-                                    { "Ref": "AWS::Region" }
-                                ] ]
-                                }
+                                "command": {"Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3Region ${AWS::Region}"}
                             },
                             "6.2-set-S3-bucket": {
-                                "command": {"Fn::Join": [" ", [
-                                    "crudini --set /data/moloch/etc/config.ini default s3Bucket",
-                                    { "Ref": "S3Bucket" }
-                                ] ]
-                                }
+                                "command": {"Fn::Sub":  "crudini --set /data/moloch/etc/config.ini default s3Bucket ${S3Bucket}"}
                             },
                             "6.3-set-viewer-plugin": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default viewerPlugins writer-s3/index.js"
-                            }                            
+                            },
+                            "6.4-set-pcap-write-method": {
+                                "command": "crudini --set /data/moloch/etc/config.ini default pcapWriteMethod s3"
+                            },
+                            "6.5-set-S3-ExpireDays": {
+                                "command": {"Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3ExpireDays ${S3ExpireDays}"}
+                            }
                         },
                         "services": {
                             "sysvinit": {
@@ -948,7 +979,7 @@
                                                 {
                                                     "Ref": "AWS::StackName"
                                                 },
-                                                "--resource LaunchTemplate",
+                                                "--resource ViewerLaunchTemplate",
                                                 "--region",
                                                 {
                                                     "Ref": "AWS::Region"
@@ -1062,29 +1093,6 @@
                                     {"Ref": "S2SPassword"},
                                     "yes"
                                 ] ] }
-                            },
-                            "/data/moloch/db/safeinit.sh": {
-                                "content": { "Fn::Join": [ "\n", [
-                                    "delay=$RANDOM",
-                                    "let 'delay %= 20'",
-                                    "echo \"Sleeping for $delay seconds...\"",
-                                    "sleep $delay",
-                                    "echo 'Checking ES URL:' $1",
-                                    "if /data/moloch/db/db.pl $1 info 2>/dev/null | grep 'DB Version' | grep '\\-1' >/dev/null",
-                                    "then",
-                                    "    echo 'ES running but not initialised, initialising...'",
-                                    "    /data/moloch/db/db.pl $1 init && /data/moloch/bin/moloch_add_user.sh \"$2\" \"Admin User\" \"$3\" --admin",
-                                    "    exit $?",
-                                    "elif /data/moloch/db/db.pl $1 info >/dev/null 2>&1",
-                                    "then",
-                                    "    echo 'ES running and initialised. Nothing to do.'",
-                                    "    exit 0",
-                                    "else",
-                                    "    echo 'ES not reachable'",
-                                    "    exit 1",
-                                    "fi"
-                                ] ] },
-                                "mode": "000700"
                             }
                         },
                         "commands": {
@@ -1104,56 +1112,26 @@
                                 "command": "crudini --set /data/moloch/etc/config.ini default bpf \"udp port 4789\""
                             },
                             "6.1-set-S3-region": {
-                                "command": {"Fn::Join": [" ", [
-                                    "crudini --set /data/moloch/etc/config.ini default s3Region",
-                                    { "Ref": "AWS::Region" }
-                                ] ]
-                                }
+                                "command": {"Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3Region ${AWS::Region}"}
                             },
                             "6.2-set-S3-bucket": {
-                                "command": {"Fn::Join": [" ", [
-                                    "crudini --set /data/moloch/etc/config.ini default s3Bucket",
-                                    { "Ref": "S3Bucket" }
-                                ] ]
-                                }
+                                "command": {"Fn::Sub":  "crudini --set /data/moloch/etc/config.ini default s3Bucket ${S3Bucket}"}
                             },
                             "6.3-set-viewer-plugin": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default viewerPlugins writer-s3/index.js"
                             },
-                            "6.5-set-pcap-write-method": {
+                            "6.4-set-pcap-write-method": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default pcapWriteMethod s3"
                             },
-                            "6.6-set-maxFileTimeM": {
-                                "command": {"Fn::Join": [" ", [
-                                    "crudini --set /data/moloch/etc/config.ini default maxFileTimeM",
-                                    { "Ref": "S3FlushInterval" }
-                                ] ]
-                                }
+                            "6.5-set-maxFileTimeM": {
+                                "command": {"Fn::Sub": "crudini --set /data/moloch/etc/config.ini default maxFileTimeM ${S3FlushInterval}"}
                             },
                             "6.7-set-maxFileSizeG": {
-                                "command": {"Fn::Join": [" ", [
-                                    "crudini --set /data/moloch/etc/config.ini default maxFileSizeG",
-                                    { "Ref": "S3FMaxObjectSizeGB" }
-                                ] ]
-                                }
+                                "command": {"Fn::Sub": "crudini --set /data/moloch/etc/config.ini default maxFileSizeG ${S3FMaxObjectSizeGB}"}
                             },
                             "7-chmod-suricata-logs": {
                                 "command": "chmod 755 /var/log/suricata"
-                            },
-                            "8-ES-init":{
-                                "command": {"Fn::Join": [ " ", [
-                                    "/data/moloch/db/safeinit.sh",
-                                    {"Fn::Join": [
-                                        "",
-                                        [
-                                            "https://",
-                                            {"Fn::GetAtt": ["ElasticSearchDomain", "DomainEndpoint"]}
-                                        ]
-                                    ] },
-                                    {"Ref": "AdminUser"},
-                                    {"Ref": "AdminPassword"}
-                                ] ] }
-                            }                            
+                            }
                         },
                         "services": {
                             "sysvinit": {
@@ -1195,7 +1173,7 @@
                                                 {
                                                     "Ref": "AWS::StackName"
                                                 },
-                                                "--resource LaunchTemplate",
+                                                "--resource CaptureLaunchTemplate",
                                                 "--region",
                                                 {
                                                     "Ref": "AWS::Region"
@@ -1216,7 +1194,7 @@
                                                 {
                                                     "Ref": "AWS::Region"
                                                 },
-                                                "--resource AutoScalingGroup"
+                                                "--resource CaptureAutoScalingGroup"
                                             ]
                                         ]
                                     }
@@ -1224,6 +1202,156 @@
                             ]
                         }
                     }
+                }
+            }
+        },
+        "ESInitInstance": {
+            "Type": "AWS::EC2::Instance",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "configSets": {
+                        "configure-all": [
+                            "install-moloch-dependencies",
+                            "install-moloch"
+                        ]
+                    },
+                    "install-moloch-dependencies": {
+                        "packages": {
+                            "yum": {
+                                "libyaml-devel": [],
+                                "perl-JSON": [],
+                                "perl-libwww-perl": [],
+                                "perl-LWP-Protocol-https": []
+                            }
+                        }
+                    },
+                    "install-moloch": {
+                        "packages": {
+                            "rpm": {
+                                "moloch": {"Ref": "MolochDownloadURL"}
+                            }
+                        },
+                        "files": {
+                            "/data/moloch/Configure-answers": {
+                                "content": { "Fn::Join": [ "\n", [
+                                    "eth0",
+                                    "no",
+                                    {"Fn::Join": [
+                                        "",
+                                        [
+                                            "https://",
+                                            {"Fn::GetAtt": ["ElasticSearchDomain", "DomainEndpoint"]}
+                                        ]
+                                    ] },
+                                    {"Ref": "S2SPassword"},
+                                    "yes"
+                                ] ] }
+                            },
+                            "/data/moloch/db/safeinit.sh": {
+                                "content": { "Fn::Join": [ "\n", [
+                                    "echo 'Checking ES URL:' $1",
+                                    "if /data/moloch/db/db.pl $1 info 2>/dev/null | grep 'DB Version' | grep '\\-1' >/dev/null",
+                                    "then",
+                                    "    echo 'ES running but not initialised, initialising...'",
+                                    "    /data/moloch/db/db.pl $1 init && /data/moloch/bin/moloch_add_user.sh \"$2\" \"Admin User\" \"$3\" --admin",
+                                    "    exit $?",
+                                    "elif /data/moloch/db/db.pl $1 info >/dev/null 2>&1",
+                                    "then",
+                                    "    echo 'ES running and initialised. Nothing to do.'",
+                                    "    exit 0",
+                                    "else",
+                                    "    echo 'ES not reachable'",
+                                    "    exit 1",
+                                    "fi"
+                                ] ] },
+                                "mode": "000700"
+                            }
+                        },
+                        "commands": {
+                            "1-remove-yum-prompt": {
+                                "command": "sed -i \"s/yum install/yum -y install/g\" /data/moloch/bin/Configure" 
+                            },
+                            "2-configure-moloch": {
+                                "command": "/data//moloch/bin/Configure < /data/moloch/Configure-answers"
+                            },
+                            "3-ES-init":{
+                                "command": {"Fn::Join": [ " ", [
+                                    "/data/moloch/db/safeinit.sh",
+                                    {"Fn::Join": [
+                                        "",
+                                        [
+                                            "https://",
+                                            {"Fn::GetAtt": ["ElasticSearchDomain", "DomainEndpoint"]}
+                                        ]
+                                    ] },
+                                    {"Ref": "AdminUser"},
+                                    {"Ref": "AdminPassword"}
+                                ] ] }
+                            }                            
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "ImageId": { "Ref": "LatestAmiId" },
+                "InstanceType": "t3.micro",
+                "KeyName": { "Ref": "Keypair" },
+                "SecurityGroupIds": [
+                    {
+                        "Ref": "CaptureInstanceSecurityGroup"
+                    }
+                ],
+                "InstanceInitiatedShutdownBehavior": "terminate",
+                "SubnetId": {"Ref": "PrivateSubnet1"},
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "\n",
+                            [
+                                "#!/bin/bash -xe",
+                                "yum install -y aws-cfn-bootstrap",
+                                {
+                                    "Fn::Join": [
+                                        " ",
+                                        [
+                                            "/opt/aws/bin/cfn-init -v -c configure-all",
+                                            "--stack",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "--resource ESInitInstance",
+                                            "--region",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            }
+                                        ]
+                                    ]
+                                },
+                                {
+                                    "Fn::Join": [
+                                        " ",
+                                        [
+                                            "/opt/aws/bin/cfn-signal",
+                                            "--stack",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "--resource ESInitInstance"
+                                        ]
+                                    ]
+                                },
+                                "poweroff"
+                            ]
+                        ]
+                    }
+                }
+            },
+            "CreationPolicy": {
+                "ResourceSignal": {
                 }
             }
         },
@@ -1304,8 +1432,11 @@
             }
         }
     },
-
     "Outputs": {
+        "VPC": {
+            "Description": "VPC",
+            "Value": { "Ref": "VPC"}
+        },
         "S3Bucket": {
             "Description": "S3 bucket for packet captures",
             "Value": { "Ref": "S3Bucket"}
