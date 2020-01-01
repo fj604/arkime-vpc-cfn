@@ -1130,7 +1130,7 @@
                                 "command": {"Fn::Sub": "crudini --set /data/moloch/etc/config.ini default maxFileSizeG ${S3FMaxObjectSizeGB}"}
                             },
                             "7-chmod-suricata-logs": {
-                                "command": "chmod 755 /var/log/suricata"
+                                "command": "chmod 644 /var/log/suricata"
                             }
                         },
                         "services": {
