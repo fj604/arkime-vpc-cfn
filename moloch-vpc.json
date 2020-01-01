@@ -7,29 +7,33 @@
         "AWS::CloudFormation::Interface": {
             "ParameterGroups": [
                 {
-                    "Label": {"default": "Network settings"},
+                    "Label": {"default": "Network"},
                     "Parameters": ["VpcCIDR", "PublicSubnet1CIDR", "PublicSubnet2CIDR", "PrivateSubnet1CIDR", "PrivateSubnet2CIDR", "VXLANLocation", "HTTPSLocation", "SSHLocation"]
                 },
                 {
-                    "Label": {"default": "Moloch Instance settings"},
+                    "Label": {"default": "Moloch Instances"},
                     "Parameters": ["ViewerInstanceType", "CaptureInstanceType", "Keypair", "LatestAmiId"]
                 },
                 {
-                    "Label": {"default": "Elasticsearch settings"},
+                    "Label": {"default": "Elasticsearch"},
                     "Parameters": ["ESInstanceType", "ESInstanceCount", "ESVolumeSize"]
                 },
                 {
-                    "Label": {"default": "Moloch settings"},
+                    "Label": {"default": "Moloch Application"},
                     "Parameters": ["MolochDownloadURL",
                         "AdminUser", "AdminPassword", "S2SPassword", "S3FMaxObjectSizeGB", "S3FlushInterval", "S3ExpireDays"]
                 },
                 {
-                    "Label": {"default": "Auto-scaling settings"},
+                    "Label": {"default": "Auto-scaling"},
                     "Parameters": ["ViewerMinSize", "ViewerMaxSize", "CaptureMinSize", "CaptureMaxSize", "OperatorEMail"]
                 },
                 {
                     "Label": {"default": "Viewer UI TLS settings"},
                     "Parameters": ["CertificateArn"]
+                },
+                {
+                    "Label": {"default": "Logging"},
+                    "Parameters": ["LogRetentionDays"]
                 }
             ],
             "ParameterLabels": {
@@ -60,7 +64,8 @@
                 "CaptureMinSize": {"default": "Minumum number of capture instances"},
                 "CaptureMaxSize": {"default": "Maximum number of capture instances"},
                 "OperatorEMail": {"default": "Auto-scale notifications email address"},
-                "CertificateArn": {"default": "TLS Certificate ARN"}
+                "CertificateArn": {"default": "TLS Certificate ARN"},
+                "LogRetentionDays": {"default": "CloudWatch Logs retention period"}
             }
         }
     },
@@ -312,9 +317,33 @@
             "ConstraintDescription": "must be at least six alphanumeric characters",
             "MinLength": "6",
             "AllowedPattern" : "[a-zA-Z][a-zA-Z0-9]*"
+        },
+        "LogRetentionDays": {
+            "Type": "Number",
+            "Default": 3653,
+            "AllowedValues": [ 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653],
+            "Description": "CloudWatch Logs retention in days"
         }
     },
     "Resources": {
+        "ViewerLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "RetentionInDays": {"Ref": "LogRetentionDays"}
+            }
+        },
+        "CaptureLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "RetentionInDays": {"Ref": "LogRetentionDays"}
+            }
+        },
+        "SuricataLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "RetentionInDays": {"Ref": "LogRetentionDays"}
+            }
+        },
         "VPC": {
             "Type": "AWS::EC2::VPC",
             "Properties": {
@@ -557,6 +586,9 @@
                     ]
                 },
                 "Path": "/",
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+                ],
                 "Policies": [
                     {
                         "PolicyName": "MolochCapturePolicy",
@@ -605,6 +637,9 @@
                     ]
                 },
                 "Path": "/",
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+                ],
                 "Policies": [
                     {
                         "PolicyName": "MolochViewerPolicy",
@@ -868,10 +903,43 @@
                 "AWS::CloudFormation::Init": {
                     "configSets": {
                         "configure-all": [
+                            "install-configure-cloudwatch-agent",
                             "install-epel",
                             "install-moloch-dependencies",
                             "install-moloch"
                         ]
+                    },
+                    "install-configure-cloudwatch-agent": {
+                        "files": {
+                            "/opt/aws/amazon-cloudwatch-agent/bin/config.json": {
+                                "content": {
+                                    "logs":
+                                        {
+                                        "logs_collected": {
+                                            "files": {
+                                                "collect_list": [
+                                                    {
+                                                        "file_path": "/data/moloch/logs/viewer.log",
+                                                        "log_group_name": { "Ref" : "ViewerLogGroup" }
+                                                    }
+                                                ]
+                                                    
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "packages": {
+                            "rpm": {
+                                "cloudwatch-agent": "https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm"
+                            }
+                        },
+                        "commands": {
+                            "configure-agent": {
+                                "command": "amazon-cloudwatch-agent-ctl -a fetch-config -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s"
+                            } 
+                        }
                     },
                     "install-epel": {
                         "commands": {
@@ -1017,11 +1085,48 @@
                 "AWS::CloudFormation::Init": {
                     "configSets": {
                         "configure-all": [
+                            "install-configure-cloudwatch-agent",
                             "install-epel",
                             "install-suricata",
                             "install-moloch-dependencies",
                             "install-moloch"
                         ]
+                    },
+                    "install-configure-cloudwatch-agent": {
+                        "files": {
+                            "/opt/aws/amazon-cloudwatch-agent/bin/config.json": {
+                                "content": {
+                                    "logs":
+                                        {
+                                        "logs_collected": {
+                                            "files": {
+                                                "collect_list": [
+                                                    {
+                                                        "file_path": "/data/moloch/logs/capture.log",
+                                                        "log_group_name": { "Ref" : "CaptureLogGroup" }
+                                                    },
+                                                    {
+                                                        "file_path": "/var/log/suricata/eve.json",
+                                                        "log_group_name": { "Ref" : "SuricataLogGroup" }
+                                                    }
+                                                ]
+                                                    
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "packages": {
+                            "rpm": {
+                                "cloudwatch-agent": "https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm"
+                            }
+                        },
+                        "commands": {
+                            "configure-agent": {
+                                "command": "amazon-cloudwatch-agent-ctl -a fetch-config -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s"
+                            } 
+                        }
                     },
                     "install-epel": {
                         "commands": {
@@ -1451,6 +1556,18 @@
                 ["https://", {"Fn::GetAtt": ["ViewerLoadBalancer", "DNSName"] } 
                 ] ] 
             }
+        },
+        "MolochViewerLogGroup": {
+            "Description": "CloudWatch Log Group",
+            "Value": { "Ref": "ViewerLogGroup" }
+        },
+        "MolochCaptureLogGroup": {
+            "Description": "CloudWatch Log Group",
+            "Value": { "Ref": "CaptureLogGroup" }
+        },
+        "SuricataeLogGroup": {
+            "Description": "CloudWatch Log Group",
+            "Value": { "Ref": "SuricataLogGroup" }
         }
     }
 }
