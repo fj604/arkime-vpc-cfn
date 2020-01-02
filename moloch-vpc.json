@@ -16,7 +16,7 @@
                 },
                 {
                     "Label": {"default": "Elasticsearch"},
-                    "Parameters": ["ESInstanceType", "ESInstanceCount", "ESVolumeSize"]
+                    "Parameters": ["ESVersion", "ESInstanceType", "ESInstanceCount", "ESVolumeSize"]
                 },
                 {
                     "Label": {"default": "Moloch Application"},
@@ -28,7 +28,7 @@
                     "Parameters": ["ViewerMinSize", "ViewerMaxSize", "CaptureMinSize", "CaptureMaxSize", "OperatorEMail"]
                 },
                 {
-                    "Label": {"default": "Viewer UI TLS settings"},
+                    "Label": {"default": "Viewer UI TLS certificate"},
                     "Parameters": ["CertificateArn"]
                 },
                 {
@@ -45,6 +45,7 @@
                 "VXLANLocation": {"default": "Traffic capture CIDR"},
                 "HTTPSLocation": {"default": "HTTPS CIDR"},
                 "SSHLocation": {"default": "SSH CIDR"},
+                "ESVersion": {"default": "Elasticsearch version"},
                 "ESInstanceCount": {"default": "Number of Elasticsearch instances"},
                 "ESVolumeSize": {"default": "Elasticsearch volume size"},
                 "ESInstanceType": {"default": "Elasticsearch instance type"},
