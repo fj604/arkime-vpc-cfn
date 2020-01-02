@@ -137,13 +137,13 @@
             "Type": "Number",
             "Description": "Minumum number of instances in the Capture Auto Scaling group",
             "Default": 2,
-            "ConstraintDescription": "must be 1 or larger",
+            "ConstraintDescription": "must be 1 or greater",
             "MinValue": 1
         },
         "ViewerMaxSize": {
             "Type": "Number",
             "Description": "Maxiumum number of instances in the Capture Auto Scaling group",
-            "ConstraintDescription": "must be 1 or larger",
+            "ConstraintDescription": "must be 1 or greater",
             "Default": 2,
             "MinValue": 1
         },
@@ -151,13 +151,13 @@
             "Type": "Number",
             "Description": "Minumum number of instances in the Capture Auto Scaling group",
             "Default": 2,
-            "ConstraintDescription": "must be 1 or larger",
+            "ConstraintDescription": "must be 1 or greater",
             "MinValue": 1
         },
         "CaptureMaxSize": {
             "Type": "Number",
             "Description": "Maxiumum number of instances in the Capture Auto Scaling group",
-            "ConstraintDescription": "must be 1 or larger",
+            "ConstraintDescription": "must be 1 or greater",
             "Default": 2,
             "MinValue": 1
         },
@@ -248,7 +248,7 @@
             "Type": "Number",
             "Description": "Number of ElasticSearch instances",
             "Default": 2,
-            "ConstraintDescription": "must be 2 or larger",
+            "ConstraintDescription": "must be an even number, 2 or greater",
             "MinValue": 2
         },
         "ESVolumeSize": {
