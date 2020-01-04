@@ -870,7 +870,7 @@
                 "HealthCheckPort": "80",
                 "HealthCheckProtocol": "HTTP",
                 "Matcher": {
-                    "HttpCode": "200-299"
+                    "HttpCode": "200-399"
                 },
                 "Port": 4789,
                 "Protocol": "UDP",
@@ -945,7 +945,6 @@
                     "install-moloch-dependencies": {
                         "packages": {
                             "yum": {
-                                "lighttpd": [],
                                 "libyaml-devel": [],
                                 "perl-JSON": [],
                                 "perl-libwww-perl": [],
@@ -1084,7 +1083,8 @@
                             "install-epel",
                             "install-suricata",
                             "install-moloch-dependencies",
-                            "install-moloch"
+                            "install-moloch",
+                            "install-lighttpd"
                         ]
                     },
                     "install-configure-cloudwatch-agent": {
@@ -1241,7 +1241,23 @@
                                 }
                             }
                         }
+                    },
+                    "install-lighttpd": {
+                        "packages": {
+                            "yum": {
+                                "lighttpd": []
+                            }
+                        },
+                        "services": {
+                            "sysvinit": {
+                                "lighttpd": {
+                                    "enabled": "true",
+                                    "ensureRunning" : "true"    
+                                }
+                            }
+                        }
                     }
+
                 }
             },
             "Properties": {
