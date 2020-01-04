@@ -8,7 +8,7 @@
             "ParameterGroups": [
                 {
                     "Label": {"default": "Network"},
-                    "Parameters": ["VpcCIDR", "PublicSubnet1CIDR", "PublicSubnet2CIDR", "PrivateSubnet1CIDR", "PrivateSubnet2CIDR", "VXLANLocation", "HTTPSLocation", "SSHLocation"]
+                    "Parameters": ["VpcCIDR", "PublicSubnet1CIDR", "PublicSubnet2CIDR", "PrivateSubnet1CIDR", "PrivateSubnet2CIDR", "VXLANLocation", "HTTPSLocation"]
                 },
                 {
                     "Label": {"default": "Moloch Instances"},
@@ -44,7 +44,6 @@
                 "PrivateSubnet2CIDR": {"default": "Private subnet 2 CIDR"},
                 "VXLANLocation": {"default": "Traffic capture CIDR"},
                 "HTTPSLocation": {"default": "HTTPS CIDR"},
-                "SSHLocation": {"default": "SSH CIDR"},
                 "ESVersion": {"default": "Elasticsearch version"},
                 "ESInstanceCount": {"default": "Number of Elasticsearch instances"},
                 "ESVolumeSize": {"default": "Elasticsearch volume size"},
@@ -224,7 +223,6 @@
             "Type" : "String",
             "Default": "7.1",
             "AllowedValues": [
-                "6.7",
                 "6.8",
                 "7.1"
             ],
@@ -260,15 +258,6 @@
         "CertificateArn": {
             "Type": "String",
             "Description": "TLS Certificate ARN from AWS Certificate Manager"
-        },
-        "SSHLocation": {
-            "Type": "String",
-            "Default": "0.0.0.0/0",
-            "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
-            "ConstraintDescription": "must be a valid CIDR range of the form x.x.x.x/x.",
-            "Description": "Allow SSH access from x.x.x.x/x",
-            "MaxLength": "18",
-            "MinLength": "9"
         },
         "VXLANLocation": {
             "Type": "String",
@@ -878,7 +867,11 @@
         "CaptureTargetGroup": {
             "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
             "Properties": {
-                "HealthCheckPort": "22",
+                "HealthCheckPort": "80",
+                "HealthCheckProtocol": "HTTP",
+                "Matcher": {
+                    "HttpCode": "200-299"
+                },
                 "Port": 4789,
                 "Protocol": "UDP",
                 "TargetType": "instance",
@@ -952,6 +945,7 @@
                     "install-moloch-dependencies": {
                         "packages": {
                             "yum": {
+                                "lighttpd": [],
                                 "libyaml-devel": [],
                                 "perl-JSON": [],
                                 "perl-libwww-perl": [],
@@ -1490,16 +1484,8 @@
         "ViewerInstanceSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
-                "GroupDescription": "Enable access to SSH and Moloch viewer port 8005",
+                "GroupDescription": "Enable access to Moloch viewer port 8005 from Application Load Balancer",
                 "SecurityGroupIngress": [
-                    {
-                        "CidrIp": {
-                            "Ref": "SSHLocation"
-                        },
-                        "FromPort": 22,
-                        "IpProtocol": "tcp",
-                        "ToPort": 22
-                    },
                     {
                         "SourceSecurityGroupId": {
                             "Ref": "ViewerLBSecurityGroup"
@@ -1515,16 +1501,8 @@
         "CaptureInstanceSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
-                "GroupDescription": "Enable access to SSH, VXLAN and Moloch viewer port 8005",
+                "GroupDescription": "Enable access VXLAN and port 80 for Load Balancer health check",
                 "SecurityGroupIngress": [
-                    {
-                        "CidrIp": {
-                            "Ref": "SSHLocation"
-                        },
-                        "FromPort": 22,
-                        "IpProtocol": "tcp",
-                        "ToPort": 22
-                    },
                     {
                         "CidrIp": {
                             "Ref": "VXLANLocation"
@@ -1532,7 +1510,39 @@
                         "FromPort": 4789,
                         "IpProtocol": "udp",
                         "ToPort": 4789
-                    }
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "PrivateSubnet1CIDR"
+                        },
+                        "FromPort": 4789,
+                        "IpProtocol": "udp",
+                        "ToPort": 4789
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "PrivateSubnet2CIDR"
+                        },
+                        "FromPort": 4789,
+                        "IpProtocol": "udp",
+                        "ToPort": 4789
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "PrivateSubnet1CIDR"
+                        },
+                        "FromPort": 80,
+                        "IpProtocol": "tcp",
+                        "ToPort": 80
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "PrivateSubnet2CIDR"
+                        },
+                        "FromPort": 80,
+                        "IpProtocol": "tcp",
+                        "ToPort": 80
+                    }                    
                 ],
                 "VpcId": { "Ref": "VPC" }
             }
@@ -1559,15 +1569,15 @@
             }
         },
         "MolochViewerLogGroup": {
-            "Description": "CloudWatch Log Group",
+            "Description": "Moloch Viewer CloudWatch Log Group",
             "Value": { "Ref": "ViewerLogGroup" }
         },
         "MolochCaptureLogGroup": {
-            "Description": "CloudWatch Log Group",
+            "Description": "Moloch Capture CloudWatch Log Group",
             "Value": { "Ref": "CaptureLogGroup" }
         },
-        "SuricataeLogGroup": {
-            "Description": "CloudWatch Log Group",
+        "SuricataLogGroup": {
+            "Description": "Suricata CloudWatch Log Group",
             "Value": { "Ref": "SuricataLogGroup" }
         }
     }
