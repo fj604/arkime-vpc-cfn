@@ -1248,6 +1248,11 @@
                                 "lighttpd": []
                             }
                         },
+                        "commands": {
+                            "configure-agent": {
+                                "command": "echo 'server.bind = \"0.0.0.0\"' >> /etc/lighttpd/lighttpd.conf"
+                            } 
+                        },
                         "services": {
                             "sysvinit": {
                                 "lighttpd": {
