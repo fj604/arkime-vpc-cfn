@@ -8,7 +8,7 @@
             "ParameterGroups": [
                 {
                     "Label": {"default": "Network"},
-                    "Parameters": ["VpcCIDR", "PublicSubnet1CIDR", "PublicSubnet2CIDR", "PrivateSubnet1CIDR", "PrivateSubnet2CIDR", "VXLANLocation", "HTTPSLocation"]
+                    "Parameters": ["VpcCIDR", "PublicSubnet1CIDR", "PublicSubnet2CIDR", "PrivateSubnet1CIDR", "PrivateSubnet2CIDR", "CaptureCIDR", "ViewerCIDR"]
                 },
                 {
                     "Label": {"default": "Moloch Instances"},
@@ -42,8 +42,8 @@
                 "PublicSubnet2CIDR": {"default": "Public subnet 2 CIDR"},
                 "PrivateSubnet1CIDR": {"default": "Private subnet 1 CIDR"},
                 "PrivateSubnet2CIDR": {"default": "Private subnet 2 CIDR"},
-                "VXLANLocation": {"default": "Traffic capture CIDR"},
-                "HTTPSLocation": {"default": "HTTPS CIDR"},
+                "CaptureCIDR": {"default": "Traffic capture CIDR"},
+                "ViewerCIDR": {"default": "Viewer access CIDR"},
                 "ESVersion": {"default": "Elasticsearch version"},
                 "ESInstanceCount": {"default": "Number of Elasticsearch instances"},
                 "ESVolumeSize": {"default": "Elasticsearch volume size"},
@@ -259,7 +259,7 @@
             "Type": "String",
             "Description": "TLS Certificate ARN from AWS Certificate Manager"
         },
-        "VXLANLocation": {
+        "CaptureCIDR": {
             "Type": "String",
             "Default": "0.0.0.0/0",
             "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
@@ -268,7 +268,7 @@
             "MaxLength": "18",
             "MinLength": "9"
         },
-        "HTTPSLocation": {
+        "ViewerCIDR": {
             "Type": "String",
             "Default": "0.0.0.0/0",
             "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
@@ -1478,7 +1478,7 @@
                 "SecurityGroupIngress": [
                     {
                         "CidrIp": {
-                            "Ref": "HTTPSLocation"
+                            "Ref": "ViewerCIDR"
                         },
                         "FromPort": 443,
                         "IpProtocol": "tcp",
@@ -1486,7 +1486,7 @@
                     },
                     {
                         "CidrIp": {
-                            "Ref": "HTTPSLocation"
+                            "Ref": "ViewerCIDR"
                         },
                         "FromPort": 80,
                         "IpProtocol": "tcp",
@@ -1521,7 +1521,7 @@
                 "SecurityGroupIngress": [
                     {
                         "CidrIp": {
-                            "Ref": "VXLANLocation"
+                            "Ref": "CaptureCIDR"
                         },
                         "FromPort": 4789,
                         "IpProtocol": "udp",
