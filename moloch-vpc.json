@@ -999,6 +999,12 @@
                             },
                             "6.5-set-S3-ExpireDays": {
                                 "command": {"Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3ExpireDays ${S3ExpireDays}"}
+                            },
+                            "6.6-remove-geoLite2ASN": {
+                                "command": "crudini --set /data/moloch/etc/config.ini default geoLite2ASN \"\""
+                            },
+                            "6.7-remove-geoLite2Country ": {
+                                "command": "crudini --set /data/moloch/etc/config.ini default geoLite2Country \"\""
                             }
                         },
                         "services": {
@@ -1105,7 +1111,6 @@
                                                         "log_group_name": { "Ref" : "SuricataLogGroup" }
                                                     }
                                                 ]
-                                                    
                                             }
                                         }
                                     }
@@ -1120,7 +1125,7 @@
                         "commands": {
                             "configure-agent": {
                                 "command": "amazon-cloudwatch-agent-ctl -a fetch-config -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s"
-                            } 
+                            }
                         }
                     },
                     "install-epel": {
@@ -1228,6 +1233,12 @@
                             },
                             "6.7-set-maxFileSizeG": {
                                 "command": {"Fn::Sub": "crudini --set /data/moloch/etc/config.ini default maxFileSizeG ${S3FMaxObjectSizeGB}"}
+                            },
+                            "6.8-remove-geoLite2ASN": {
+                                "command": "crudini --set /data/moloch/etc/config.ini default geoLite2ASN \"\""
+                            },
+                            "6.9-remove-geoLite2Country ": {
+                                "command": "crudini --set /data/moloch/etc/config.ini default geoLite2Country \"\""
                             },
                             "7-chmod-suricata-logs": {
                                 "command": "chmod 644 /var/log/suricata"
