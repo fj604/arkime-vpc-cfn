@@ -1624,7 +1624,6 @@
                             "7.2-change-dropGroup": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default dropGroup suricata"
                             }
-
                         },
                         "services": {
                             "sysvinit": {
