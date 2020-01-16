@@ -1619,7 +1619,7 @@
                                 "command": "crudini --set /data/moloch/etc/config.ini default geoLite2Country \"\""
                             },
                             "7-chmod-suricata-logs": {
-                                "command": "chmod 644 /var/log/suricata"
+                                "command": "chmod -R 644 /var/log/suricata"
                             }
                         },
                         "services": {
