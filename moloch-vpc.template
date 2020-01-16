@@ -1618,9 +1618,13 @@
                             "6.9-remove-geoLite2Country ": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default geoLite2Country \"\""
                             },
-                            "7-chmod-suricata-logs": {
-                                "command": "chmod -R 644 /var/log/suricata"
+                            "7.1-change-dropUser": {
+                                "command": "crudini --set /data/moloch/etc/config.ini default dropUser suricata"
+                            },
+                            "7.2-change-dropGroup": {
+                                "command": "crudini --set /data/moloch/etc/config.ini default dropGroup suricata"
                             }
+
                         },
                         "services": {
                             "sysvinit": {
