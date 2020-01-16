@@ -1201,8 +1201,9 @@
                 "HealthCheckPort": "8005",
                 "Port": 8005,
                 "Protocol": "HTTP",
+                "HealthCheckPath": "/_ns_/nstest.html",
                 "Matcher": {
-                    "HttpCode": "401"
+                    "HttpCode": "200"
                 },
                 "TargetType": "instance",
                 "VpcId": {
