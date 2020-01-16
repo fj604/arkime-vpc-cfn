@@ -1607,15 +1607,15 @@
                                     "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default maxFileTimeM ${S3FlushInterval}"
                                 }
                             },
-                            "6.7-set-maxFileSizeG": {
+                            "6.6-set-maxFileSizeG": {
                                 "command": {
                                     "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default maxFileSizeG ${S3FMaxObjectSizeGB}"
                                 }
                             },
-                            "6.8-remove-geoLite2ASN": {
+                            "6.7-remove-geoLite2ASN": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default geoLite2ASN \"\""
                             },
-                            "6.9-remove-geoLite2Country ": {
+                            "6.8-remove-geoLite2Country ": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default geoLite2Country \"\""
                             },
                             "7.1-change-dropUser": {
