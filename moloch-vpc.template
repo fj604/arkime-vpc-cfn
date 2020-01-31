@@ -1630,7 +1630,9 @@
                                 "command": "crudini --set /data/moloch/etc/config.ini default geoLite2Country \"\""
                             },
                             "6.9-set-tcp-health-check": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default tcpHealthCheckPort ${TcpHealthCheckPort}"
+                                "command": {
+                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default tcpHealthCheckPort ${TcpHealthCheckPort}"
+                                }
                             },
                             "7.1-change-dropUser": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default dropUser suricata"
