@@ -245,7 +245,7 @@
         "TcpHealthCheckPort": {
             "Type": "Number",
             "Description": "TCP Health Check port for Capture instances",
-            "Default": 20100,
+            "Default": 24789,
             "ConstraintDescription": "must be between 1 and 65535",
             "MinValue": 1,
             "MaxValue": 65535            
@@ -1630,7 +1630,9 @@
                                 "command": "crudini --set /data/moloch/etc/config.ini default geoLite2Country \"\""
                             },
                             "6.9-set-tcp-health-check": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default tcpHealthCheckPort ${TcpHealthCheckPort}"
+                                "command": {
+                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default tcpHealthCheckPort ${TcpHealthCheckPort}"
+                                }
                             },
                             "7.1-change-dropUser": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default dropUser suricata"
