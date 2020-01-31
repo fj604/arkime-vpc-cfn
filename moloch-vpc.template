@@ -51,6 +51,7 @@
                         "S2SPassword",
                         "S3FMaxObjectSizeGB",
                         "S3FlushInterval",
+                        "TcpHealthCheckPort",
                         "S3ExpireDays"
                     ]
                 },
@@ -150,6 +151,9 @@
                 "S3ExpireDays": {
                     "default": "Days to keep packet captures"
                 },
+                "TcpHealthCheckPort": {
+                    "default": "TCP port for capture instance healtp check"
+                },
                 "ViewerMinSize": {
                     "default": "Minumum number of viewer instances"
                 },
@@ -237,6 +241,14 @@
             "Default": 3660,
             "ConstraintDescription": "must be 1 or more",
             "MinValue": 1
+        },
+        "TcpHealthCheckPort": {
+            "Type": "Number",
+            "Description": "TCP Health Check port for Capture instances",
+            "Default": 20100,
+            "ConstraintDescription": "must be between 1 and 65535",
+            "MinValue": 1,
+            "MaxValue": 65535            
         },
         "ViewerMinSize": {
             "Type": "Number",
@@ -1182,11 +1194,10 @@
         "CaptureTargetGroup": {
             "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
             "Properties": {
-                "HealthCheckPort": "80",
-                "HealthCheckProtocol": "HTTP",
-                "Matcher": {
-                    "HttpCode": "200-399"
+                "HealthCheckPort": {
+                    "Ref": "TcpHealthCheckPort"
                 },
+                "HealthCheckProtocol": "TCP",
                 "Port": 4789,
                 "Protocol": "UDP",
                 "TargetType": "instance",
@@ -1439,8 +1450,7 @@
                             "install-epel",
                             "install-suricata",
                             "install-moloch-dependencies",
-                            "install-moloch",
-                            "install-lighttpd"
+                            "install-moloch"
                         ]
                     },
                     "install-configure-cloudwatch-agent": {
@@ -1579,7 +1589,7 @@
                                 "command": "/data//moloch/bin/Configure < /data/moloch/Configure-answers"
                             },
                             "3-add-plugins": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default plugins \"suricata.so; writer-s3.so\""
+                                "command": "crudini --set /data/moloch/etc/config.ini default plugins \"suricata.so; writer-s3.so; tcphealthcheck.so\""
                             },
                             "4-add-suricata-alert-file": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default suricataAlertFile /var/log/suricata/eve.json"
@@ -1619,6 +1629,9 @@
                             "6.8-remove-geoLite2Country ": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default geoLite2Country \"\""
                             },
+                            "6.9-set-tcp-health-check": {
+                                "command": "crudini --set /data/moloch/etc/config.ini default tcpHealthCheckPort ${TcpHealthCheckPort}"
+                            },
                             "7.1-change-dropUser": {
                                 "command": "crudini --set /data/moloch/etc/config.ini default dropUser suricata"
                             },
@@ -1629,26 +1642,6 @@
                         "services": {
                             "sysvinit": {
                                 "molochcapture": {
-                                    "enabled": "true",
-                                    "ensureRunning": "true"
-                                }
-                            }
-                        }
-                    },
-                    "install-lighttpd": {
-                        "packages": {
-                            "yum": {
-                                "lighttpd": []
-                            }
-                        },
-                        "commands": {
-                            "configure-agent": {
-                                "command": "echo 'server.bind = \"0.0.0.0\"' >> /etc/lighttpd/lighttpd.conf"
-                            }
-                        },
-                        "services": {
-                            "sysvinit": {
-                                "lighttpd": {
                                     "enabled": "true",
                                     "ensureRunning": "true"
                                 }
@@ -1997,17 +1990,25 @@
                         "CidrIp": {
                             "Ref": "PrivateSubnet1CIDR"
                         },
-                        "FromPort": 80,
+                        "FromPort": {
+                            "Ref": "TcpHealthCheckPort"
+                        },
                         "IpProtocol": "tcp",
-                        "ToPort": 80
+                        "ToPort": {
+                            "Ref": "TcpHealthCheckPort"
+                        }
                     },
                     {
                         "CidrIp": {
                             "Ref": "PrivateSubnet2CIDR"
                         },
-                        "FromPort": 80,
+                        "FromPort": {
+                            "Ref": "TcpHealthCheckPort"
+                        },
                         "IpProtocol": "tcp",
-                        "ToPort": 80
+                        "ToPort": {
+                            "Ref": "TcpHealthCheckPort"
+                        }
                     }
                 ],
                 "VpcId": {
