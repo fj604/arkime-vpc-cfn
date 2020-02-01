@@ -69,6 +69,14 @@
                 },
                 {
                     "Label": {
+                        "default": "Load Balancing"
+                    },
+                    "Parameters": [
+                        "CaptureCrossZoneLoadBalancing"
+                    ]
+                },
+                {
+                    "Label": {
                         "default": "Viewer UI TLS certificate"
                     },
                     "Parameters": [
@@ -152,7 +160,7 @@
                     "default": "Days to keep packet captures"
                 },
                 "TcpHealthCheckPort": {
-                    "default": "TCP port for capture instance healtp check"
+                    "default": "TCP port for capture instance health check"
                 },
                 "ViewerMinSize": {
                     "default": "Minumum number of viewer instances"
@@ -168,6 +176,9 @@
                 },
                 "OperatorEMail": {
                     "default": "Auto-scale notifications email address"
+                },
+                "CaptureCrossZoneLoadBalancing": {
+                    "default": "Enable cross-zone load balancing for capture instances"
                 },
                 "CertificateArn": {
                     "default": "TLS Certificate ARN"
@@ -277,6 +288,15 @@
             "ConstraintDescription": "must be 1 or greater",
             "Default": 2,
             "MinValue": 1
+        },
+        "CaptureCrossZoneLoadBalancing": {
+            "Type": "String",
+            "Default": "false",
+            "ConstraintDescription": "must be true or false",
+            "AllowedValues": [
+                "true",
+                "false"
+            ]
         },
         "ViewerInstanceType": {
             "Type": "String",
@@ -984,7 +1004,9 @@
                 "LoadBalancerAttributes": [
                     {
                         "Key": "load_balancing.cross_zone.enabled",
-                        "Value": "true"
+                        "Value": {
+                            "Ref": "CaptureCrossZoneLoadBalancing"
+                        }
                     }
                 ]
             }
