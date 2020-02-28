@@ -1008,14 +1008,6 @@
                 "ServiceName": {
                     "Fn::Sub": "com.amazonaws.${AWS::Region}.logs"
                 },
-                "RouteTableIds": [
-                    {
-                        "Ref": "PrivateRouteTable1"
-                    },
-                    {
-                        "Ref": "PrivateRouteTable2"
-                    }
-                ],
                 "SecurityGroupIds": [
                     {
                         "Ref": "LogsEndpointSecurityGroup"
