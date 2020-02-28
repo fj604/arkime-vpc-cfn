@@ -1020,7 +1020,7 @@
                     {
                         "Ref": "LogsEndpointSecurityGroup"
                     }
-                ]
+                ],
                 "VpcEndpointType": "Interface",
                 "VpcId": {
                     "Ref": "VPC"
