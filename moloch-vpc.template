@@ -975,6 +975,25 @@
                 }
             }
         },
+        "LogsEndpoint": {
+            "Type": "AWS::EC2::VPCEndpoint",
+            "Properties": {
+                "ServiceName": {
+                    "Fn::Sub": "com.amazonaws.${AWS::Region}.logs"
+                },
+                "RouteTableIds": [
+                    {
+                        "Ref": "PrivateRouteTable1"
+                    },
+                    {
+                        "Ref": "PrivateRouteTable2"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "VPC"
+                }
+            }
+        },
         "NotificationTopic": {
             "Type": "AWS::SNS::Topic",
             "Properties": {
