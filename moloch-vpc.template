@@ -259,7 +259,7 @@
             "Default": 24789,
             "ConstraintDescription": "must be between 1 and 65535",
             "MinValue": 1,
-            "MaxValue": 65535            
+            "MaxValue": 65535
         },
         "ViewerMinSize": {
             "Type": "Number",
@@ -508,6 +508,33 @@
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
                 "GroupDescription": "Enable ElasticSearch port 443",
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": {
+                            "Ref": "PrivateSubnet1CIDR"
+                        },
+                        "FromPort": 443,
+                        "IpProtocol": "tcp",
+                        "ToPort": 443
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "PrivateSubnet2CIDR"
+                        },
+                        "FromPort": 443,
+                        "IpProtocol": "tcp",
+                        "ToPort": 443
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "VPC"
+                }
+            }
+        },
+        "LogsEndpointSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enable port 443",
                 "SecurityGroupIngress": [
                     {
                         "CidrIp": {
@@ -989,6 +1016,12 @@
                         "Ref": "PrivateRouteTable2"
                     }
                 ],
+                "SecurityGroupIds": [
+                    {
+                        "Ref": "LogsEndpointSecurityGroup"
+                    }
+                ]
+                "VpcEndpointType": "Interface",
                 "VpcId": {
                     "Ref": "VPC"
                 }
