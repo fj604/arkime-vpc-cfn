@@ -361,7 +361,8 @@
             "Default": "7.1",
             "AllowedValues": [
                 "6.8",
-                "7.1"
+                "7.1",
+                "7.4"
             ],
             "Description": "ElasticSearch version"
         },
@@ -844,6 +845,12 @@
                 "SubnetId": {
                     "Ref": "PrivateSubnet2"
                 }
+            }
+        },
+        "ESServiceLinkedRole": {
+            "Type": "AWS::IAM::ServiceLinkedRole",
+            "Properties": {
+                "AWSServiceName": "es.amazonaws.com"
             }
         },
         "CaptureIAMRole": {
