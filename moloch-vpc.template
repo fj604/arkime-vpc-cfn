@@ -37,7 +37,8 @@
                         "ESVersion",
                         "ESInstanceType",
                         "ESInstanceCount",
-                        "ESVolumeSize"
+                        "ESVolumeSize",
+                        "CreateESServiceLinkedRole"
                     ]
                 },
                 {
@@ -125,6 +126,9 @@
                 },
                 "ESInstanceType": {
                     "default": "Elasticsearch instance type"
+                },
+                "CreateESServiceLinkedRole": {
+                    "default": "Create Service-Linked Role for Amazon ES"
                 },
                 "ViewerInstanceType": {
                     "default": "Viewer instance type"
@@ -248,7 +252,7 @@
         },
         "S3ExpireDays": {
             "Type": "Number",
-            "Description": "Expire packet captures from S3 fter this many days",
+            "Description": "Expire packet captures from S3 after this many days",
             "Default": 3660,
             "ConstraintDescription": "must be 1 or more",
             "MinValue": 1
@@ -393,6 +397,15 @@
             "Description": "EBS Volume size in GB",
             "Default": 10
         },
+        "CreateESServiceLinkedRole": {
+            "Type": "String",
+            "Description": "Create Service-Linked Role for Amazon Elasticsearch?",
+            "AllowedValues": [
+                "yes",
+                "no"
+            ],
+            "Default": "yes"
+        },
         "CertificateArn": {
             "Type": "String",
             "Description": "TLS Certificate ARN from AWS Certificate Manager"
@@ -469,6 +482,16 @@
                 3653
             ],
             "Description": "CloudWatch Logs retention in days"
+        }
+    },
+    "Conditions": {
+        "CondCreateESServiceLinkedRole": {
+            "Fn::Equals": [
+                {
+                    "Ref": "CreateESServiceLinkedRole"
+                },
+                "yes"
+            ]
         }
     },
     "Resources": {
@@ -849,6 +872,7 @@
         },
         "ESServiceLinkedRole": {
             "Type": "AWS::IAM::ServiceLinkedRole",
+            "Condition": "CondCreateESServiceLinkedRole",
             "Properties": {
                 "AWSServiceName": "es.amazonaws.com"
             }
