@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "Deploy clustered Moloch packet capture system enhanced with Suricata IDS",
+    "Description": "Deploy highly available and scalable Arkime (formerly Moloch) packet capture system enhanced with Suricata IDS",
     "Metadata": {
         "AWS::CloudFormation::Interface": {
             "ParameterGroups": [
@@ -20,7 +20,7 @@
                 },
                 {
                     "Label": {
-                        "default": "Moloch Instances"
+                        "default": "Arkime Instances"
                     },
                     "Parameters": [
                         "ViewerInstanceType",
@@ -43,10 +43,10 @@
                 },
                 {
                     "Label": {
-                        "default": "Moloch Application"
+                        "default": "Arkime Application"
                     },
                     "Parameters": [
-                        "MolochDownloadURL",
+                        "ArkimeDownloadURL",
                         "AdminUser",
                         "AdminPassword",
                         "S2SPassword",
@@ -142,8 +142,8 @@
                 "LatestAmiId": {
                     "default": "Amazon Linux 2 AMI ID"
                 },
-                "MolochDownloadURL": {
-                    "default": "Moloch download URL"
+                "ArkimeDownloadURL": {
+                    "default": "Arkime download URL"
                 },
                 "AdminUser": {
                     "default": "Administrator username"
@@ -328,7 +328,7 @@
         },
         "CaptureInstanceType": {
             "Type": "String",
-            "Default": "t3.small",
+            "Default": "t3.medium",
             "AllowedValues": [
                 "t3.micro",
                 "t3.small",
@@ -362,11 +362,16 @@
         },
         "ESVersion": {
             "Type": "String",
-            "Default": "7.1",
+            "Default": "7.8",
             "AllowedValues": [
                 "6.8",
+<<<<<<< HEAD:moloch-vpc.template
                 "7.1",
                 "7.4"
+=======
+                "7.8",
+                "7.9"
+>>>>>>> version-refresh:arkime-vpc.template
             ],
             "Description": "ElasticSearch version"
         },
@@ -376,12 +381,13 @@
             "AllowedValues": [
                 "t2.small.elasticsearch",
                 "t2.medium.elasticsearch",
+                "t3.small.elasticsearch",
+                "t3.medium.elasticsearch",
                 "m5.large.elasticsearch",
                 "m4.large.elasticsearch",
                 "c5.large.elasticsearch",
                 "r5.large.elasticsearch",
-                "r4.large.elasticsearch",
-                "i3.large.elasticsearch"
+                "r4.large.elasticsearch"
             ],
             "Description": "Enter ElasticSearch instance type"
         },
@@ -436,10 +442,10 @@
             "MinLength": "6",
             "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*"
         },
-        "MolochDownloadURL": {
+        "ArkimeDownloadURL": {
             "Type": "String",
             "Default": "https://s3.amazonaws.com/files.molo.ch/moloch-master.centos7.x86_64.rpm",
-            "Description": "Enter Moloch CentOS 7 RPM package download URL",
+            "Description": "Enter Arkime CentOS 7 RPM package download URL",
             "MinLength": "5"
         },
         "AdminUser": {
@@ -495,6 +501,14 @@
         }
     },
     "Resources": {
+        "SystemLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "RetentionInDays": {
+                    "Ref": "LogRetentionDays"
+                }
+            }
+        },
         "ViewerLogGroup": {
             "Type": "AWS::Logs::LogGroup",
             "Properties": {
@@ -555,7 +569,7 @@
                 }
             }
         },
-        "LogsEndpointSecurityGroup": {
+        "PrivateEndpointSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
                 "GroupDescription": "Enable port 443",
@@ -898,7 +912,8 @@
                 },
                 "Path": "/",
                 "ManagedPolicyArns": [
-                    "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+                    "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy",
+                    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
                 ],
                 "Policies": [
                     {
@@ -953,7 +968,8 @@
                 },
                 "Path": "/",
                 "ManagedPolicyArns": [
-                    "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+                    "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy",
+                    "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
                 ],
                 "Policies": [
                     {
@@ -1041,7 +1057,58 @@
                 },
                 "SecurityGroupIds": [
                     {
-                        "Ref": "LogsEndpointSecurityGroup"
+                        "Ref": "PrivateEndpointSecurityGroup"
+                    }
+                ],
+                "VpcEndpointType": "Interface",
+                "VpcId": {
+                    "Ref": "VPC"
+                }
+            }
+        },
+        "SSMEndpoint": {
+            "Type": "AWS::EC2::VPCEndpoint",
+            "Properties": {
+                "ServiceName": {
+                    "Fn::Sub": "com.amazonaws.${AWS::Region}.ssm"
+                },
+                "SecurityGroupIds": [
+                    {
+                        "Ref": "PrivateEndpointSecurityGroup"
+                    }
+                ],
+                "VpcEndpointType": "Interface",
+                "VpcId": {
+                    "Ref": "VPC"
+                }
+            }
+        },
+        "EC2MessagesEndpoint": {
+            "Type": "AWS::EC2::VPCEndpoint",
+            "Properties": {
+                "ServiceName": {
+                    "Fn::Sub": "com.amazonaws.${AWS::Region}.ec2messages"
+                },
+                "SecurityGroupIds": [
+                    {
+                        "Ref": "PrivateEndpointSecurityGroup"
+                    }
+                ],
+                "VpcEndpointType": "Interface",
+                "VpcId": {
+                    "Ref": "VPC"
+                }
+            }
+        },
+        "SSMMessagesEndpoint": {
+            "Type": "AWS::EC2::VPCEndpoint",
+            "Properties": {
+                "ServiceName": {
+                    "Fn::Sub": "com.amazonaws.${AWS::Region}.ssmmessages"
+                },
+                "SecurityGroupIds": [
+                    {
+                        "Ref": "PrivateEndpointSecurityGroup"
                     }
                 ],
                 "VpcEndpointType": "Interface",
@@ -1340,6 +1407,12 @@
                                             "files": {
                                                 "collect_list": [
                                                     {
+                                                        "file_path": "/var/log/messages",
+                                                        "log_group_name": {
+                                                            "Ref": "SystemLogGroup"
+                                                        }
+                                                    },
+                                                    {
                                                         "file_path": "/data/moloch/logs/viewer.log",
                                                         "log_group_name": {
                                                             "Ref": "ViewerLogGroup"
@@ -1384,7 +1457,7 @@
                         "packages": {
                             "rpm": {
                                 "moloch": {
-                                    "Ref": "MolochDownloadURL"
+                                    "Ref": "ArkimeDownloadURL"
                                 }
                             },
                             "yum": {
@@ -1559,6 +1632,12 @@
                                             "files": {
                                                 "collect_list": [
                                                     {
+                                                        "file_path": "/var/log/messages",
+                                                        "log_group_name": {
+                                                            "Ref": "SystemLogGroup"
+                                                        }
+                                                    },
+                                                    {
                                                         "file_path": "/data/moloch/logs/capture.log",
                                                         "log_group_name": {
                                                             "Ref": "CaptureLogGroup"
@@ -1640,7 +1719,7 @@
                         "packages": {
                             "rpm": {
                                 "moloch": {
-                                    "Ref": "MolochDownloadURL"
+                                    "Ref": "ArkimeDownloadURL"
                                 }
                             },
                             "yum": {
@@ -1842,7 +1921,7 @@
                         "packages": {
                             "rpm": {
                                 "moloch": {
-                                    "Ref": "MolochDownloadURL"
+                                    "Ref": "ArkimeDownloadURL"
                                 }
                             }
                         },
@@ -2040,7 +2119,7 @@
         "ViewerInstanceSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
-                "GroupDescription": "Enable access to Moloch viewer port 8005 from Application Load Balancer",
+                "GroupDescription": "Enable access to Arkime viewer port 8005 from Application Load Balancer",
                 "SecurityGroupIngress": [
                     {
                         "SourceSecurityGroupId": {
@@ -2136,7 +2215,7 @@
             }
         },
         "ViewerURL": {
-            "Description": "Moloch Viewer URL",
+            "Description": "Arkime Viewer URL",
             "Value": {
                 "Fn::Join": [
                     "",
@@ -2152,14 +2231,20 @@
                 ]
             }
         },
-        "MolochViewerLogGroup": {
-            "Description": "Moloch Viewer CloudWatch Log Group",
+        "SystemLogGroup": {
+            "Description": "System CloudWatch Log Group",
+            "Value": {
+                "Ref": "SystemLogGroup"
+            }
+        },
+        "ArkimeViewerLogGroup": {
+            "Description": "Arkime Viewer CloudWatch Log Group",
             "Value": {
                 "Ref": "ViewerLogGroup"
             }
         },
-        "MolochCaptureLogGroup": {
-            "Description": "Moloch Capture CloudWatch Log Group",
+        "ArkimeCaptureLogGroup": {
+            "Description": "Arkime Capture CloudWatch Log Group",
             "Value": {
                 "Ref": "CaptureLogGroup"
             }
