@@ -372,7 +372,7 @@
         },
         "ESInstanceType": {
             "Type": "String",
-            "Default": "t2.medium.elasticsearch",
+            "Default": "t3.medium.elasticsearch",
             "AllowedValues": [
                 "t2.small.elasticsearch",
                 "t2.medium.elasticsearch",
