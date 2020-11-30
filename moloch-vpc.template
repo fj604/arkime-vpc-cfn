@@ -1,6 +1,6 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "Deploy clustered Moloch packet capture system enhanced with Suricata IDS",
+    "Description": "Deploy highly available and scalable Arkime (formerly Moloch) packet capture system enhanced with Suricata IDS",
     "Metadata": {
         "AWS::CloudFormation::Interface": {
             "ParameterGroups": [
@@ -20,7 +20,7 @@
                 },
                 {
                     "Label": {
-                        "default": "Moloch Instances"
+                        "default": "Arkime Instances"
                     },
                     "Parameters": [
                         "ViewerInstanceType",
@@ -43,10 +43,10 @@
                 },
                 {
                     "Label": {
-                        "default": "Moloch Application"
+                        "default": "Arkime Application"
                     },
                     "Parameters": [
-                        "MolochDownloadURL",
+                        "ArkimeDownloadURL",
                         "AdminUser",
                         "AdminPassword",
                         "S2SPassword",
@@ -142,8 +142,8 @@
                 "LatestAmiId": {
                     "default": "Amazon Linux 2 AMI ID"
                 },
-                "MolochDownloadURL": {
-                    "default": "Moloch download URL"
+                "ArkimeDownloadURL": {
+                    "default": "Arkime download URL"
                 },
                 "AdminUser": {
                     "default": "Administrator username"
@@ -437,10 +437,10 @@
             "MinLength": "6",
             "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*"
         },
-        "MolochDownloadURL": {
+        "ArkimeDownloadURL": {
             "Type": "String",
             "Default": "https://s3.amazonaws.com/files.molo.ch/moloch-master.centos7.x86_64.rpm",
-            "Description": "Enter Moloch CentOS 7 RPM package download URL",
+            "Description": "Enter Arkime CentOS 7 RPM package download URL",
             "MinLength": "5"
         },
         "AdminUser": {
@@ -496,6 +496,14 @@
         }
     },
     "Resources": {
+        "SystemLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "RetentionInDays": {
+                    "Ref": "LogRetentionDays"
+                }
+            }
+        },
         "ViewerLogGroup": {
             "Type": "AWS::Logs::LogGroup",
             "Properties": {
@@ -1394,6 +1402,12 @@
                                             "files": {
                                                 "collect_list": [
                                                     {
+                                                        "file_path": "/var/log/messages",
+                                                        "log_group_name": {
+                                                            "Ref": "SystemLogGroup"
+                                                        }
+                                                    },
+                                                    {
                                                         "file_path": "/data/moloch/logs/viewer.log",
                                                         "log_group_name": {
                                                             "Ref": "ViewerLogGroup"
@@ -1438,7 +1452,7 @@
                         "packages": {
                             "rpm": {
                                 "moloch": {
-                                    "Ref": "MolochDownloadURL"
+                                    "Ref": "ArkimeDownloadURL"
                                 }
                             },
                             "yum": {
@@ -1613,6 +1627,12 @@
                                             "files": {
                                                 "collect_list": [
                                                     {
+                                                        "file_path": "/var/log/messages",
+                                                        "log_group_name": {
+                                                            "Ref": "SystemLogGroup"
+                                                        }
+                                                    },
+                                                    {
                                                         "file_path": "/data/moloch/logs/capture.log",
                                                         "log_group_name": {
                                                             "Ref": "CaptureLogGroup"
@@ -1694,7 +1714,7 @@
                         "packages": {
                             "rpm": {
                                 "moloch": {
-                                    "Ref": "MolochDownloadURL"
+                                    "Ref": "ArkimeDownloadURL"
                                 }
                             },
                             "yum": {
@@ -1896,7 +1916,7 @@
                         "packages": {
                             "rpm": {
                                 "moloch": {
-                                    "Ref": "MolochDownloadURL"
+                                    "Ref": "ArkimeDownloadURL"
                                 }
                             }
                         },
@@ -2094,7 +2114,7 @@
         "ViewerInstanceSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
-                "GroupDescription": "Enable access to Moloch viewer port 8005 from Application Load Balancer",
+                "GroupDescription": "Enable access to Arkime viewer port 8005 from Application Load Balancer",
                 "SecurityGroupIngress": [
                     {
                         "SourceSecurityGroupId": {
@@ -2190,7 +2210,7 @@
             }
         },
         "ViewerURL": {
-            "Description": "Moloch Viewer URL",
+            "Description": "Arkime Viewer URL",
             "Value": {
                 "Fn::Join": [
                     "",
@@ -2206,14 +2226,20 @@
                 ]
             }
         },
-        "MolochViewerLogGroup": {
-            "Description": "Moloch Viewer CloudWatch Log Group",
+        "SystemLogGroup": {
+            "Description": "System CloudWatch Log Group",
+            "Value": {
+                "Ref": "SystemLogGroup"
+            }
+        },
+        "ArkimeViewerLogGroup": {
+            "Description": "Arkime Viewer CloudWatch Log Group",
             "Value": {
                 "Ref": "ViewerLogGroup"
             }
         },
-        "MolochCaptureLogGroup": {
-            "Description": "Moloch Capture CloudWatch Log Group",
+        "ArkimeCaptureLogGroup": {
+            "Description": "Arkime Capture CloudWatch Log Group",
             "Value": {
                 "Ref": "CaptureLogGroup"
             }
