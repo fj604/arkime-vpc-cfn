@@ -13,7 +13,7 @@
         "ViewerInstanceType": "t3.small",
         "CaptureInstanceType": "t3.small",
         "LatestAmiId": "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2",
-        "MolochDownloadURL": "https://s3.amazonaws.com/files.molo.ch/builds/centos-7/moloch-3.0.0-1.x86_64.rpm",
+        "DownloadURL": "https://s3.amazonaws.com/files.molo.ch/builds/centos-7/moloch-3.0.0-1.x86_64.rpm",
         "AdminUser": "admin",
         "AdminPassword": "molpass",
         "S2SPassword": "S2Spassword",
