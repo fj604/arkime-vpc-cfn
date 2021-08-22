@@ -9,7 +9,7 @@
         "ViewerCIDR": "0.0.0.0/0",
         "ESInstanceCount": "2",
         "ESVolumeSize": "10",
-        "ESInstanceType": "t2.medium.elasticsearch",
+        "ESInstanceType": "t3.medium.elasticsearch",
         "ViewerInstanceType": "t3.small",
         "CaptureInstanceType": "t3.small",
         "LatestAmiId": "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2",

@@ -492,6 +492,14 @@
         }
     },
     "Resources": {
+        "InitLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "RetentionInDays": {
+                    "Ref": "LogRetentionDays"
+                }
+            }
+        },
         "SystemLogGroup": {
             "Type": "AWS::Logs::LogGroup",
             "Properties": {
@@ -530,7 +538,7 @@
                 "CidrBlock": {
                     "Ref": "VpcCIDR"
                 },
-                "EnableDnsHostnames": true
+                "EnableDnsHostnames": true,
             }
         },
         "ESSecurityGroup": {
@@ -1055,6 +1063,7 @@
         "LogsEndpoint": {
             "Type": "AWS::EC2::VPCEndpoint",
             "Properties": {
+                "PrivateDnsEnabled": true,
                 "ServiceName": {
                     "Fn::Sub": "com.amazonaws.${AWS::Region}.logs"
                 },
@@ -1072,6 +1081,7 @@
         "SSMEndpoint": {
             "Type": "AWS::EC2::VPCEndpoint",
             "Properties": {
+                "PrivateDnsEnabled": true,
                 "ServiceName": {
                     "Fn::Sub": "com.amazonaws.${AWS::Region}.ssm"
                 },
@@ -1089,6 +1099,7 @@
         "EC2MessagesEndpoint": {
             "Type": "AWS::EC2::VPCEndpoint",
             "Properties": {
+                "PrivateDnsEnabled": true,
                 "ServiceName": {
                     "Fn::Sub": "com.amazonaws.${AWS::Region}.ec2messages"
                 },
@@ -1106,6 +1117,7 @@
         "SSMMessagesEndpoint": {
             "Type": "AWS::EC2::VPCEndpoint",
             "Properties": {
+                "PrivateDnsEnabled": true,
                 "ServiceName": {
                     "Fn::Sub": "com.amazonaws.${AWS::Region}.ssmmessages"
                 },
@@ -1900,9 +1912,48 @@
                 "AWS::CloudFormation::Init": {
                     "configSets": {
                         "configure-all": [
+                            "install-configure-cloudwatch-agent",
                             "install-moloch-dependencies",
                             "install-moloch"
                         ]
+                    },
+                    "install-configure-cloudwatch-agent": {
+                        "files": {
+                            "/opt/aws/amazon-cloudwatch-agent/bin/config.json": {
+                                "content": {
+                                    "logs": {
+                                        "logs_collected": {
+                                            "files": {
+                                                "collect_list": [
+                                                    {
+                                                        "file_path": "/var/log/cloud-init-output.log",
+                                                        "log_group_name": {
+                                                            "Ref": "InitLogGroup"
+                                                        }
+                                                    },
+                                                    {
+                                                        "file_path": "/var/log/messages",
+                                                        "log_group_name": {
+                                                            "Ref": "SystemLogGroup"
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "packages": {
+                            "rpm": {
+                                "cloudwatch-agent": "https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm"
+                            }
+                        },
+                        "commands": {
+                            "configure-agent": {
+                                "command": "amazon-cloudwatch-agent-ctl -a fetch-config -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s"
+                            }
+                        }
                     },
                     "install-moloch-dependencies": {
                         "packages": {
@@ -2023,6 +2074,9 @@
                     "Ref": "LatestAmiId"
                 },
                 "InstanceType": "t3.micro",
+                "IamInstanceProfile": {
+                    "Ref": "CaptureInstanceProfile"
+                },
                 "SecurityGroupIds": [
                     {
                         "Ref": "CaptureInstanceSecurityGroup"
@@ -2080,7 +2134,9 @@
                 }
             },
             "CreationPolicy": {
-                "ResourceSignal": {}
+                "ResourceSignal": {
+                    "Timeout": "PT20M"
+                }
             }
         },
         "ViewerLBSecurityGroup": {
@@ -2243,6 +2299,13 @@
                 ]
             }
         },
+       "InitLogGroup": {
+            "Description": "Arkime Init CloudWatch Log Group",
+            "Value": {
+                "Ref": "InitLogGroup"
+            }
+        },
+ 
         "SystemLogGroup": {
             "Description": "System CloudWatch Log Group",
             "Value": {
