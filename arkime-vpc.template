@@ -273,7 +273,7 @@
             "Description": "Minumum number of instances in the Capture Auto Scaling group",
             "Default": 2,
             "ConstraintDescription": "must be 1 or greater",
-            "MinValue": 1
+            "MinValue": 0
         },
         "ViewerMaxSize": {
             "Type": "Number",
@@ -287,7 +287,7 @@
             "Description": "Minumum number of instances in the Capture Auto Scaling group",
             "Default": 2,
             "ConstraintDescription": "must be 1 or greater",
-            "MinValue": 1
+            "MinValue": 0
         },
         "CaptureMaxSize": {
             "Type": "Number",
