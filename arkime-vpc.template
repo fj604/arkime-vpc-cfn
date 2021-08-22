@@ -25,7 +25,6 @@
                     "Parameters": [
                         "ViewerInstanceType",
                         "CaptureInstanceType",
-                        "Keypair",
                         "LatestAmiId"
                     ]
                 },
@@ -135,9 +134,6 @@
                 },
                 "CaptureInstanceType": {
                     "default": "Capture instance type"
-                },
-                "Keypair": {
-                    "default": "Key pair"
                 },
                 "LatestAmiId": {
                     "default": "Amazon Linux 2 AMI ID"
@@ -351,11 +347,6 @@
                 "c5n.large"
             ],
             "Description": "Enter Capture instance type"
-        },
-        "Keypair": {
-            "Type": "AWS::EC2::KeyPair::KeyName",
-            "ConstraintDescription": "must be the name of an existing EC2 KeyPair.",
-            "Description": "Key pair for EC2 instances"
         },
         "OperatorEMail": {
             "Description": "E-mail address to notify if there are any scaling operations",
@@ -1566,9 +1557,6 @@
                     "InstanceType": {
                         "Ref": "ViewerInstanceType"
                     },
-                    "KeyName": {
-                        "Ref": "Keypair"
-                    },
                     "SecurityGroupIds": [
                         {
                             "Ref": "ViewerInstanceSecurityGroup"
@@ -1853,9 +1841,6 @@
                     "InstanceType": {
                         "Ref": "CaptureInstanceType"
                     },
-                    "KeyName": {
-                        "Ref": "Keypair"
-                    },
                     "SecurityGroupIds": [
                         {
                             "Ref": "CaptureInstanceSecurityGroup"
@@ -2038,9 +2023,6 @@
                     "Ref": "LatestAmiId"
                 },
                 "InstanceType": "t3.micro",
-                "KeyName": {
-                    "Ref": "Keypair"
-                },
                 "SecurityGroupIds": [
                     {
                         "Ref": "CaptureInstanceSecurityGroup"
