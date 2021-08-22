@@ -564,6 +564,12 @@
                         "ToPort": 443
                     }
                 ],
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "127.0.0.1/32",
+                        "IpProtocol": "-1"
+                    }
+                ],
                 "VpcId": {
                     "Ref": "VPC"
                 }
@@ -589,6 +595,12 @@
                         "FromPort": 443,
                         "IpProtocol": "tcp",
                         "ToPort": 443
+                    }
+                ],
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "127.0.0.1/32",
+                        "IpProtocol": "-1"
                     }
                 ],
                 "VpcId": {
@@ -2111,6 +2123,12 @@
                         "ToPort": 80
                     }
                 ],
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "127.0.0.1/32",
+                        "IpProtocol": "-1"
+                    }
+                ],
                 "VpcId": {
                     "Ref": "VPC"
                 }
@@ -2128,6 +2146,12 @@
                         "FromPort": 8005,
                         "IpProtocol": "tcp",
                         "ToPort": 8005
+                    }
+                ],
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "IpProtocol": "-1"
                     }
                 ],
                 "VpcId": {
@@ -2148,6 +2172,12 @@
                         "IpProtocol": "udp",
                         "ToPort": 4789
                     },
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "IpProtocol": "-1"
+                    }
+                ],
                     {
                         "CidrIp": {
                             "Ref": "PrivateSubnet1CIDR"
