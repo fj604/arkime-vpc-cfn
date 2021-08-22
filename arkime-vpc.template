@@ -191,6 +191,13 @@
                     "default": "CloudWatch Logs retention period"
                 }
             }
+        },
+        "cfn-lint": {
+            config: {
+                ignore_checks: [
+                    "W4002"
+                    ]
+            }
         }
     },
     "Parameters": {
@@ -362,11 +369,9 @@
         },
         "ESVersion": {
             "Type": "String",
-            "Default": "7.8",
+            "Default": "7.10",
             "AllowedValues": [
-                "6.8",
-                "7.8",
-                "7.9"
+                "7.10"
             ],
             "Description": "ElasticSearch version"
         },
