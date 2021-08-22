@@ -2172,51 +2172,51 @@
                         "IpProtocol": "udp",
                         "ToPort": 4789
                     },
+                    {
+                        "CidrIp": {
+                            "Ref": "PrivateSubnet1CIDR"
+                        },
+                        "FromPort": 4789,
+                        "IpProtocol": "udp",
+                        "ToPort": 4789
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "PrivateSubnet2CIDR"
+                        },
+                        "FromPort": 4789,
+                        "IpProtocol": "udp",
+                        "ToPort": 4789
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "PrivateSubnet1CIDR"
+                        },
+                        "FromPort": {
+                            "Ref": "TcpHealthCheckPort"
+                        },
+                        "IpProtocol": "tcp",
+                        "ToPort": {
+                            "Ref": "TcpHealthCheckPort"
+                        }
+                    },
+                    {
+                        "CidrIp": {
+                            "Ref": "PrivateSubnet2CIDR"
+                        },
+                        "FromPort": {
+                            "Ref": "TcpHealthCheckPort"
+                        },
+                        "IpProtocol": "tcp",
+                        "ToPort": {
+                            "Ref": "TcpHealthCheckPort"
+                        }
+                    }
+                ],
                 "SecurityGroupEgress": [
                     {
                         "CidrIp": "0.0.0.0/0",
                         "IpProtocol": "-1"
-                    }
-                ],
-                    {
-                        "CidrIp": {
-                            "Ref": "PrivateSubnet1CIDR"
-                        },
-                        "FromPort": 4789,
-                        "IpProtocol": "udp",
-                        "ToPort": 4789
-                    },
-                    {
-                        "CidrIp": {
-                            "Ref": "PrivateSubnet2CIDR"
-                        },
-                        "FromPort": 4789,
-                        "IpProtocol": "udp",
-                        "ToPort": 4789
-                    },
-                    {
-                        "CidrIp": {
-                            "Ref": "PrivateSubnet1CIDR"
-                        },
-                        "FromPort": {
-                            "Ref": "TcpHealthCheckPort"
-                        },
-                        "IpProtocol": "tcp",
-                        "ToPort": {
-                            "Ref": "TcpHealthCheckPort"
-                        }
-                    },
-                    {
-                        "CidrIp": {
-                            "Ref": "PrivateSubnet2CIDR"
-                        },
-                        "FromPort": {
-                            "Ref": "TcpHealthCheckPort"
-                        },
-                        "IpProtocol": "tcp",
-                        "ToPort": {
-                            "Ref": "TcpHealthCheckPort"
-                        }
                     }
                 ],
                 "VpcId": {
