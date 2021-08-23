@@ -1074,10 +1074,10 @@
                 ],
                 "SubnetIds": [
                     {
-                        "Ref": "PrivateSubnet2"
+                        "Ref": "PrivateSubnet1"
                     },
                     {
-                        "Ref": "PrivateSubnet1"
+                        "Ref": "PrivateSubnet2"
                     }
                 ],
                 "VpcEndpointType": "Interface",
@@ -1100,10 +1100,10 @@
                 ],
                 "SubnetIds": [
                     {
-                        "Ref": "PrivateSubnet2"
+                        "Ref": "PrivateSubnet1"
                     },
                     {
-                        "Ref": "PrivateSubnet1"
+                        "Ref": "PrivateSubnet2"
                     }
                 ],
                 "VpcEndpointType": "Interface",
@@ -1126,10 +1126,10 @@
                 ],
                 "SubnetIds": [
                     {
-                        "Ref": "PrivateSubnet2"
+                        "Ref": "PrivateSubnet1"
                     },
                     {
-                        "Ref": "PrivateSubnet1"
+                        "Ref": "PrivateSubnet2"
                     }
                 ],
                 "VpcEndpointType": "Interface",
@@ -1152,10 +1152,10 @@
                 ],
                 "SubnetIds": [
                     {
-                        "Ref": "PrivateSubnet2"
+                        "Ref": "PrivateSubnet1"
                     },
                     {
-                        "Ref": "PrivateSubnet1"
+                        "Ref": "PrivateSubnet2"
                     }
                 ],
                 "VpcEndpointType": "Interface",
@@ -1460,7 +1460,7 @@
                                                         }
                                                     },
                                                     {
-                                                        "file_path": "/data/moloch/logs/viewer.log",
+                                                        "file_path": "/opt/arkime/logs/viewer.log",
                                                         "log_group_name": {
                                                             "Ref": "ViewerLogGroup"
                                                         }
@@ -1512,7 +1512,7 @@
                             }
                         },
                         "files": {
-                            "/data/moloch/Configure-answers": {
+                            "/opt/arkime/Configure-answers": {
                                 "content": {
                                     "Fn::Join": [
                                         "\n",
@@ -1544,37 +1544,37 @@
                         },
                         "commands": {
                             "1-remove-yum-prompt": {
-                                "command": "sed -i \"s/yum install/yum -y install/g\" /data/moloch/bin/Configure"
+                                "command": "sed -i \"s/yum install/yum -y install/g\" /opt/arkime/bin/Configure"
                             },
                             "2-configure-moloch": {
-                                "command": "/data//moloch/bin/Configure < /data/moloch/Configure-answers"
+                                "command": "/data//moloch/bin/Configure < /opt/arkime/Configure-answers"
                             },
                             "6.1-set-S3-region": {
                                 "command": {
-                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3Region ${AWS::Region}"
+                                    "Fn::Sub": "crudini --set /opt/arkime/etc/config.ini default s3Region ${AWS::Region}"
                                 }
                             },
                             "6.2-set-S3-bucket": {
                                 "command": {
-                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3Bucket ${S3Bucket}"
+                                    "Fn::Sub": "crudini --set /opt/arkime/etc/config.ini default s3Bucket ${S3Bucket}"
                                 }
                             },
                             "6.3-set-viewer-plugin": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default viewerPlugins writer-s3/index.js"
+                                "command": "crudini --set /opt/arkime/etc/config.ini default viewerPlugins writer-s3/index.js"
                             },
                             "6.4-set-pcap-write-method": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default pcapWriteMethod s3"
+                                "command": "crudini --set /opt/arkime/etc/config.ini default pcapWriteMethod s3"
                             },
                             "6.5-set-S3-ExpireDays": {
                                 "command": {
-                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3ExpireDays ${S3ExpireDays}"
+                                    "Fn::Sub": "crudini --set /opt/arkime/etc/config.ini default s3ExpireDays ${S3ExpireDays}"
                                 }
                             },
                             "6.6-remove-geoLite2ASN": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default geoLite2ASN \"\""
+                                "command": "crudini --set /opt/arkime/etc/config.ini default geoLite2ASN \"\""
                             },
                             "6.7-remove-geoLite2Country ": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default geoLite2Country \"\""
+                                "command": "crudini --set /opt/arkime/etc/config.ini default geoLite2Country \"\""
                             }
                         },
                         "services": {
@@ -1682,7 +1682,7 @@
                                                         }
                                                     },
                                                     {
-                                                        "file_path": "/data/moloch/logs/capture.log",
+                                                        "file_path": "/opt/arkime/logs/capture.log",
                                                         "log_group_name": {
                                                             "Ref": "CaptureLogGroup"
                                                         }
@@ -1771,7 +1771,7 @@
                             }
                         },
                         "files": {
-                            "/data/moloch/Configure-answers": {
+                            "/opt/arkime/Configure-answers": {
                                 "content": {
                                     "Fn::Join": [
                                         "\n",
@@ -1803,62 +1803,62 @@
                         },
                         "commands": {
                             "1-remove-yum-prompt": {
-                                "command": "sed -i \"s/yum install/yum -y install/g\" /data/moloch/bin/Configure"
+                                "command": "sed -i \"s/yum install/yum -y install/g\" /opt/arkime/bin/Configure"
                             },
                             "2-configure-moloch": {
-                                "command": "/data//moloch/bin/Configure < /data/moloch/Configure-answers"
+                                "command": "/data//moloch/bin/Configure < /opt/arkime/Configure-answers"
                             },
                             "3-add-plugins": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default plugins \"suricata.so; writer-s3.so; tcphealthcheck.so\""
+                                "command": "crudini --set /opt/arkime/etc/config.ini default plugins \"suricata.so; writer-s3.so; tcphealthcheck.so\""
                             },
                             "4-add-suricata-alert-file": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default suricataAlertFile /var/log/suricata/eve.json"
+                                "command": "crudini --set /opt/arkime/etc/config.ini default suricataAlertFile /var/log/suricata/eve.json"
                             },
                             "5-add-bpf": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default bpf \"udp port 4789\""
+                                "command": "crudini --set /opt/arkime/etc/config.ini default bpf \"udp port 4789\""
                             },
                             "6.1-set-S3-region": {
                                 "command": {
-                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3Region ${AWS::Region}"
+                                    "Fn::Sub": "crudini --set /opt/arkime/etc/config.ini default s3Region ${AWS::Region}"
                                 }
                             },
                             "6.2-set-S3-bucket": {
                                 "command": {
-                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3Bucket ${S3Bucket}"
+                                    "Fn::Sub": "crudini --set /opt/arkime/etc/config.ini default s3Bucket ${S3Bucket}"
                                 }
                             },
                             "6.3-set-viewer-plugin": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default viewerPlugins writer-s3/index.js"
+                                "command": "crudini --set /opt/arkime/etc/config.ini default viewerPlugins writer-s3/index.js"
                             },
                             "6.4-set-pcap-write-method": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default pcapWriteMethod s3"
+                                "command": "crudini --set /opt/arkime/etc/config.ini default pcapWriteMethod s3"
                             },
                             "6.5-set-maxFileTimeM": {
                                 "command": {
-                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default maxFileTimeM ${S3FlushInterval}"
+                                    "Fn::Sub": "crudini --set /opt/arkime/etc/config.ini default maxFileTimeM ${S3FlushInterval}"
                                 }
                             },
                             "6.6-set-maxFileSizeG": {
                                 "command": {
-                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default maxFileSizeG ${S3FMaxObjectSizeGB}"
+                                    "Fn::Sub": "crudini --set /opt/arkime/etc/config.ini default maxFileSizeG ${S3FMaxObjectSizeGB}"
                                 }
                             },
                             "6.7-remove-geoLite2ASN": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default geoLite2ASN \"\""
+                                "command": "crudini --set /opt/arkime/etc/config.ini default geoLite2ASN \"\""
                             },
                             "6.8-remove-geoLite2Country ": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default geoLite2Country \"\""
+                                "command": "crudini --set /opt/arkime/etc/config.ini default geoLite2Country \"\""
                             },
                             "6.9-set-tcp-health-check": {
                                 "command": {
-                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default tcpHealthCheckPort ${TcpHealthCheckPort}"
+                                    "Fn::Sub": "crudini --set /opt/arkime/etc/config.ini default tcpHealthCheckPort ${TcpHealthCheckPort}"
                                 }
                             },
                             "7.1-change-dropUser": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default dropUser suricata"
+                                "command": "crudini --set /opt/arkime/etc/config.ini default dropUser suricata"
                             },
                             "7.2-change-dropGroup": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default dropGroup suricata"
+                                "command": "crudini --set /opt/arkime/etc/config.ini default dropGroup suricata"
                             }
                         },
                         "services": {
@@ -1964,6 +1964,12 @@
                                                         }
                                                     },
                                                     {
+                                                        "file_path": "/var/log/cloud-init.log",
+                                                        "log_group_name": {
+                                                            "Ref": "InitLogGroup"
+                                                        }
+                                                    },
+                                                    {
                                                         "file_path": "/var/log/messages",
                                                         "log_group_name": {
                                                             "Ref": "SystemLogGroup"
@@ -2006,7 +2012,7 @@
                             }
                         },
                         "files": {
-                            "/data/moloch/Configure-answers": {
+                            "/opt/arkime/Configure-answers": {
                                 "content": {
                                     "Fn::Join": [
                                         "\n",
@@ -2035,18 +2041,18 @@
                                     ]
                                 }
                             },
-                            "/data/moloch/db/safeinit.sh": {
+                            "/opt/arkime/db/safeinit.sh": {
                                 "content": {
                                     "Fn::Join": [
                                         "\n",
                                         [
                                             "echo 'Checking ES URL:' $1",
-                                            "if /data/moloch/db/db.pl $1 info 2>/dev/null | grep 'DB Version' | grep '\\-1' >/dev/null",
+                                            "if /opt/arkime/db/db.pl $1 info 2>/dev/null | grep 'DB Version' | grep '\\-1' >/dev/null",
                                             "then",
                                             "    echo 'ES running but not initialised, initialising...'",
-                                            "    /data/moloch/db/db.pl $1 init && /data/moloch/bin/moloch_add_user.sh \"$2\" \"Admin User\" \"$3\" --admin",
+                                            "    /opt/arkime/db/db.pl $1 init && /opt/arkime/bin/moloch_add_user.sh \"$2\" \"Admin User\" \"$3\" --admin",
                                             "    exit $?",
-                                            "elif /data/moloch/db/db.pl $1 info >/dev/null 2>&1",
+                                            "elif /opt/arkime/db/db.pl $1 info >/dev/null 2>&1",
                                             "then",
                                             "    echo 'ES running and initialised. Nothing to do.'",
                                             "    exit 0",
@@ -2062,17 +2068,17 @@
                         },
                         "commands": {
                             "1-remove-yum-prompt": {
-                                "command": "sed -i \"s/yum install/yum -y install/g\" /data/moloch/bin/Configure"
+                                "command": "sed -i \"s/yum install/yum -y install/g\" /opt/arkime/bin/Configure"
                             },
                             "2-configure-moloch": {
-                                "command": "/data//moloch/bin/Configure < /data/moloch/Configure-answers"
+                                "command": "/data//moloch/bin/Configure < /opt/arkime/Configure-answers"
                             },
                             "3-ES-init": {
                                 "command": {
                                     "Fn::Join": [
                                         " ",
                                         [
-                                            "/data/moloch/db/safeinit.sh",
+                                            "/opt/arkime/db/safeinit.sh",
                                             {
                                                 "Fn::Join": [
                                                     "",
