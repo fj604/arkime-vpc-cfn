@@ -1072,6 +1072,14 @@
                         "Ref": "PrivateEndpointSecurityGroup"
                     }
                 ],
+                "SubnetIds": [
+                    {
+                        "Ref": "PrivateSubnet2"
+                    },
+                    {
+                        "Ref": "PrivateSubnet1"
+                    }
+                ],
                 "VpcEndpointType": "Interface",
                 "VpcId": {
                     "Ref": "VPC"
@@ -1088,6 +1096,14 @@
                 "SecurityGroupIds": [
                     {
                         "Ref": "PrivateEndpointSecurityGroup"
+                    }
+                ],
+                "SubnetIds": [
+                    {
+                        "Ref": "PrivateSubnet2"
+                    },
+                    {
+                        "Ref": "PrivateSubnet1"
                     }
                 ],
                 "VpcEndpointType": "Interface",
@@ -1108,6 +1124,14 @@
                         "Ref": "PrivateEndpointSecurityGroup"
                     }
                 ],
+                "SubnetIds": [
+                    {
+                        "Ref": "PrivateSubnet2"
+                    },
+                    {
+                        "Ref": "PrivateSubnet1"
+                    }
+                ],
                 "VpcEndpointType": "Interface",
                 "VpcId": {
                     "Ref": "VPC"
@@ -1124,6 +1148,14 @@
                 "SecurityGroupIds": [
                     {
                         "Ref": "PrivateEndpointSecurityGroup"
+                    }
+                ],
+                "SubnetIds": [
+                    {
+                        "Ref": "PrivateSubnet2"
+                    },
+                    {
+                        "Ref": "PrivateSubnet1"
                     }
                 ],
                 "VpcEndpointType": "Interface",
