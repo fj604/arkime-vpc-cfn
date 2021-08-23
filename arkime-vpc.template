@@ -435,7 +435,7 @@
         },
         "DownloadURL": {
             "Type": "String",
-            "Default": "https://s3.amazonaws.com/files.molo.ch/moloch-master.centos7.x86_64.rpm",
+            "Default": "https://s3.amazonaws.com/files.molo.ch/arkime-main.centos7.x86_64.rpm",
             "Description": "Enter Arkime CentOS 7 RPM package download URL",
             "MinLength": "5"
         },
@@ -928,7 +928,7 @@
                 ],
                 "Policies": [
                     {
-                        "PolicyName": "MolochCapturePolicy",
+                        "PolicyName": "ArkimeCapturePolicy",
                         "PolicyDocument": {
                             "Version": "2012-10-17",
                             "Statement": [
@@ -984,7 +984,7 @@
                 ],
                 "Policies": [
                     {
-                        "PolicyName": "MolochViewerPolicy",
+                        "PolicyName": "ArkimeViewerPolicy",
                         "PolicyDocument": {
                             "Version": "2012-10-17",
                             "Statement": [
@@ -1441,8 +1441,8 @@
                         "configure-all": [
                             "install-configure-cloudwatch-agent",
                             "install-epel",
-                            "install-moloch-dependencies",
-                            "install-moloch"
+                            "install-arkime-dependencies",
+                            "install-arkime"
                         ]
                     },
                     "install-configure-cloudwatch-agent": {
@@ -1490,7 +1490,7 @@
                             }
                         }
                     },
-                    "install-moloch-dependencies": {
+                    "install-arkime-dependencies": {
                         "packages": {
                             "yum": {
                                 "libyaml-devel": [],
@@ -1500,10 +1500,10 @@
                             }
                         }
                     },
-                    "install-moloch": {
+                    "install-arkime": {
                         "packages": {
                             "rpm": {
-                                "moloch": {
+                                "arkime": {
                                     "Ref": "DownloadURL"
                                 }
                             },
@@ -1546,8 +1546,8 @@
                             "1-remove-yum-prompt": {
                                 "command": "sed -i \"s/yum install/yum -y install/g\" /opt/arkime/bin/Configure"
                             },
-                            "2-configure-moloch": {
-                                "command": "/data//moloch/bin/Configure < /opt/arkime/Configure-answers"
+                            "2-configure-arkime": {
+                                "command": "/opt/arkime/bin/Configure < /opt/arkime/Configure-answers"
                             },
                             "6.1-set-S3-region": {
                                 "command": {
@@ -1579,7 +1579,7 @@
                         },
                         "services": {
                             "sysvinit": {
-                                "molochviewer": {
+                                "ArkimeViewer": {
                                     "enabled": "true",
                                     "ensureRunning": "true"
                                 }
@@ -1663,8 +1663,8 @@
                             "install-configure-cloudwatch-agent",
                             "install-epel",
                             "install-suricata",
-                            "install-moloch-dependencies",
-                            "install-moloch"
+                            "install-arkime-dependencies",
+                            "install-arkime"
                         ]
                     },
                     "install-configure-cloudwatch-agent": {
@@ -1749,7 +1749,7 @@
                             }
                         }
                     },
-                    "install-moloch-dependencies": {
+                    "install-arkime-dependencies": {
                         "packages": {
                             "yum": {
                                 "libyaml-devel": [],
@@ -1759,10 +1759,10 @@
                             }
                         }
                     },
-                    "install-moloch": {
+                    "install-arkime": {
                         "packages": {
                             "rpm": {
-                                "moloch": {
+                                "arkime": {
                                     "Ref": "DownloadURL"
                                 }
                             },
@@ -1805,8 +1805,8 @@
                             "1-remove-yum-prompt": {
                                 "command": "sed -i \"s/yum install/yum -y install/g\" /opt/arkime/bin/Configure"
                             },
-                            "2-configure-moloch": {
-                                "command": "/data//moloch/bin/Configure < /opt/arkime/Configure-answers"
+                            "2-configure-arkime": {
+                                "command": "/opt/arkime/bin/Configure < /opt/arkime/Configure-answers"
                             },
                             "3-add-plugins": {
                                 "command": "crudini --set /opt/arkime/etc/config.ini default plugins \"suricata.so; writer-s3.so; tcphealthcheck.so\""
@@ -1863,7 +1863,7 @@
                         },
                         "services": {
                             "sysvinit": {
-                                "molochcapture": {
+                                "ArkimeCapture": {
                                     "enabled": "true",
                                     "ensureRunning": "true"
                                 }
@@ -1945,8 +1945,8 @@
                     "configSets": {
                         "configure-all": [
                             "install-configure-cloudwatch-agent",
-                            "install-moloch-dependencies",
-                            "install-moloch"
+                            "install-arkime-dependencies",
+                            "install-arkime"
                         ]
                     },
                     "install-configure-cloudwatch-agent": {
@@ -1993,7 +1993,7 @@
                             }
                         }
                     },
-                    "install-moloch-dependencies": {
+                    "install-arkime-dependencies": {
                         "packages": {
                             "yum": {
                                 "libyaml-devel": [],
@@ -2003,10 +2003,10 @@
                             }
                         }
                     },
-                    "install-moloch": {
+                    "install-arkime": {
                         "packages": {
                             "rpm": {
-                                "moloch": {
+                                "arkime": {
                                     "Ref": "DownloadURL"
                                 }
                             }
@@ -2050,7 +2050,7 @@
                                             "if /opt/arkime/db/db.pl $1 info 2>/dev/null | grep 'DB Version' | grep '\\-1' >/dev/null",
                                             "then",
                                             "    echo 'ES running but not initialised, initialising...'",
-                                            "    /opt/arkime/db/db.pl $1 init && /opt/arkime/bin/moloch_add_user.sh \"$2\" \"Admin User\" \"$3\" --admin",
+                                            "    /opt/arkime/db/db.pl $1 init && /opt/arkime/bin/arkime_add_user.sh \"$2\" \"Admin User\" \"$3\" --admin",
                                             "    exit $?",
                                             "elif /opt/arkime/db/db.pl $1 info >/dev/null 2>&1",
                                             "then",
@@ -2070,8 +2070,8 @@
                             "1-remove-yum-prompt": {
                                 "command": "sed -i \"s/yum install/yum -y install/g\" /opt/arkime/bin/Configure"
                             },
-                            "2-configure-moloch": {
-                                "command": "/data//moloch/bin/Configure < /opt/arkime/Configure-answers"
+                            "2-configure-arkime": {
+                                "command": "/opt/arkime/bin/Configure < /opt/arkime/Configure-answers"
                             },
                             "3-ES-init": {
                                 "command": {
