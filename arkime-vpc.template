@@ -64,7 +64,7 @@
                         "ViewerMaxSize",
                         "CaptureMinSize",
                         "CaptureMaxSize",
-                        "OperatorEMail"
+                        "OperatorEmail"
                     ]
                 },
                 {
@@ -174,7 +174,7 @@
                 "CaptureMaxSize": {
                     "default": "Maximum number of capture instances"
                 },
-                "OperatorEMail": {
+                "OperatorEmail": {
                     "default": "Auto-scale notifications email address"
                 },
                 "CaptureCrossZoneLoadBalancing": {
@@ -348,7 +348,7 @@
             ],
             "Description": "Enter Capture instance type"
         },
-        "OperatorEMail": {
+        "OperatorEmail": {
             "Description": "E-mail address to notify if there are any scaling operations",
             "Type": "String",
             "AllowedPattern": "([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)",
@@ -1170,7 +1170,7 @@
                 "Subscription": [
                     {
                         "Endpoint": {
-                            "Ref": "OperatorEMail"
+                            "Ref": "OperatorEmail"
                         },
                         "Protocol": "email"
                     }
@@ -2211,7 +2211,7 @@
                     "Ref": "ViewerLBSecurityGroup"
                 },
                 "DestinationSecurityGroupId": {
-                    "Ref": "ViewerLBSecurityGroup"
+                    "Ref": "ViewerInstanceSecurityGroup"
                 },
                 "FromPort": 8005,
                 "IpProtocol": "tcp",
