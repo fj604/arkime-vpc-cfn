@@ -1321,7 +1321,12 @@
                     "LaunchTemplateId": {
                         "Ref": "ViewerLaunchTemplate"
                     },
-                    "Version": "1"
+                    "Version": {
+                        "Fn::GetAtt": [
+                            "ViewerLaunchTemplate",
+                            "LatestVersionNumber"
+                            ]
+                    }
                 },
                 "HealthCheckType": "ELB",
                 "HealthCheckGracePeriod": 600,
@@ -1375,7 +1380,12 @@
                     "LaunchTemplateId": {
                         "Ref": "CaptureLaunchTemplate"
                     },
-                    "Version": "1"
+                    "Version": {
+                        "Fn::GetAtt": [
+                            "CaptureLaunchTemplate",
+                            "LatestVersionNumber"
+                            ]
+                    }
                 },
                 "HealthCheckType": "ELB",
                 "HealthCheckGracePeriod": 600,
