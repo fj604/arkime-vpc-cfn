@@ -20,9 +20,9 @@
         "S3FMaxObjectSizeGB": "4",
         "S3FlushInterval": "1",
         "S3ExpireDays": "3650",
-        "ViewerMinSize": "0",
+        "ViewerMinSize": "2",
         "ViewerMaxSize": "2",
-        "CaptureMinSize": "0",
+        "CaptureMinSize": "2",
         "CaptureMaxSize": "2",
         "OperatorEMail": "noemail@noemail.com",
         "CertificateArn": "arn:aws:acm:eu-west-2:635563203839:certificate/4c6b20d3-32a5-4b75-8293-42df666fa116"
