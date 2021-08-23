@@ -1579,7 +1579,7 @@
                         },
                         "services": {
                             "sysvinit": {
-                                "ArkimeViewer": {
+                                "arkimeviewer": {
                                     "enabled": "true",
                                     "ensureRunning": "true"
                                 }
@@ -1863,7 +1863,7 @@
                         },
                         "services": {
                             "sysvinit": {
-                                "ArkimeCapture": {
+                                "arkimecapture": {
                                     "enabled": "true",
                                     "ensureRunning": "true"
                                 }
