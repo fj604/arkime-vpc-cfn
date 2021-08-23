@@ -2199,15 +2199,23 @@
                         "ToPort": 80
                     }
                 ],
-                "SecurityGroupEgress": [
-                    {
-                        "CidrIp": "127.0.0.1/32",
-                        "IpProtocol": "-1"
-                    }
-                ],
                 "VpcId": {
                     "Ref": "VPC"
                 }
+            }
+        },
+        "ViewerLBSecurityGroupEgress": {
+            "Type" : "AWS::EC2::SecurityGroupEgress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "ViewerLBSecurityGroup"
+                },
+                "DestinationSecurityGroupId": {
+                    "Ref": "ViewerLBSecurityGroup"
+                },
+                "FromPort": 8005,
+                "IpProtocol": "tcp",
+                "ToPort": 8005
             }
         },
         "ViewerInstanceSecurityGroup": {
