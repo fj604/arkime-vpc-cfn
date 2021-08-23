@@ -308,44 +308,11 @@
         "ViewerInstanceType": {
             "Type": "String",
             "Default": "t3.small",
-            "AllowedValues": [
-                "t2.micro",
-                "t2.small",
-                "t2.medium",
-                "t2.large",
-                "t3.micro",
-                "t3.small",
-                "t3.medium",
-                "t3.large",
-                "t3a.micro",
-                "t3a.small",
-                "t3a.medium",
-                "t3a.large",
-                "m5.large",
-                "m5a.large",
-                "m5n.large",
-                "c5.large",
-                "c5n.large"
-            ],
             "Description": "Enter Viewer instance type"
         },
         "CaptureInstanceType": {
             "Type": "String",
             "Default": "t3.medium",
-            "AllowedValues": [
-                "t3.micro",
-                "t3.small",
-                "t3.medium",
-                "t3.large",
-                "t3a.small",
-                "t3a.medium",
-                "t3a.large",
-                "m5.large",
-                "m5a.large",
-                "m5n.large",
-                "c5.large",
-                "c5n.large"
-            ],
             "Description": "Enter Capture instance type"
         },
         "OperatorEmail": {
@@ -361,25 +328,11 @@
         "ESVersion": {
             "Type": "String",
             "Default": "7.10",
-            "AllowedValues": [
-                "7.10"
-            ],
             "Description": "ElasticSearch version"
         },
         "ESInstanceType": {
             "Type": "String",
             "Default": "t3.medium.elasticsearch",
-            "AllowedValues": [
-                "t2.small.elasticsearch",
-                "t2.medium.elasticsearch",
-                "t3.small.elasticsearch",
-                "t3.medium.elasticsearch",
-                "m5.large.elasticsearch",
-                "m4.large.elasticsearch",
-                "c5.large.elasticsearch",
-                "r5.large.elasticsearch",
-                "r4.large.elasticsearch"
-            ],
             "Description": "Enter ElasticSearch instance type"
         },
         "ESInstanceCount": {
