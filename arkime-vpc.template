@@ -435,7 +435,7 @@
         },
         "DownloadURL": {
             "Type": "String",
-            "Default": "https://s3.amazonaws.com/files.molo.ch/arkime-main.centos7.x86_64.rpm",
+            "Default": "https://s3.amazonaws.com/files.molo.ch/builds/centos-7/arkime-3.0.0-1.x86_64.rpm",
             "Description": "Enter Arkime CentOS 7 RPM package download URL",
             "MinLength": "5"
         },

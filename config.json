@@ -11,7 +11,7 @@
         "ESVolumeSize": "10",
         "ESInstanceType": "t3.medium.elasticsearch",
         "ViewerInstanceType": "t3.small",
-        "CaptureInstanceType": "t3.small",
+        "CaptureInstanceType": "t3.medium",
         "LatestAmiId": "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2",
         "DownloadURL": "https://s3.amazonaws.com/files.molo.ch/builds/centos-7/arkime-3.0.0-1.x86_64.rpm",
         "AdminUser": "admin",
@@ -24,7 +24,7 @@
         "ViewerMaxSize": "2",
         "CaptureMinSize": "2",
         "CaptureMaxSize": "2",
-        "OperatorEmail": "noemail@noemail.com",
+        "OperatorEmail": "noemail@noemail.test",
         "CertificateArn": "arn:aws:acm:eu-west-2:635563203839:certificate/4c6b20d3-32a5-4b75-8293-42df666fa116"
     },
     "StackPolicy": {
