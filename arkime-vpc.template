@@ -2094,7 +2094,6 @@
             },
             "CreationPolicy": {
                 "ResourceSignal": {
-                    "Timeout": "PT20M"
                 }
             }
         },
