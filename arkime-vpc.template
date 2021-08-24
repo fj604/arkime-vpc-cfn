@@ -25,7 +25,7 @@
                     "Parameters": [
                         "ViewerInstanceType",
                         "CaptureInstanceType",
-                        "Keypair",
+                        "InitInstanceType",
                         "LatestAmiId"
                     ]
                 },
@@ -46,7 +46,7 @@
                         "default": "Arkime Application"
                     },
                     "Parameters": [
-                        "ArkimeDownloadURL",
+                        "DownloadURL",
                         "AdminUser",
                         "AdminPassword",
                         "S2SPassword",
@@ -65,7 +65,7 @@
                         "ViewerMaxSize",
                         "CaptureMinSize",
                         "CaptureMaxSize",
-                        "OperatorEMail"
+                        "OperatorEmail"
                     ]
                 },
                 {
@@ -130,19 +130,19 @@
                 "CreateESServiceLinkedRole": {
                     "default": "Create Service-Linked Role for Amazon ES"
                 },
+                "InitInstanceType": {
+                    "default": "Init instance type"
+                },
                 "ViewerInstanceType": {
                     "default": "Viewer instance type"
                 },
                 "CaptureInstanceType": {
                     "default": "Capture instance type"
                 },
-                "Keypair": {
-                    "default": "Key pair"
-                },
                 "LatestAmiId": {
                     "default": "Amazon Linux 2 AMI ID"
                 },
-                "ArkimeDownloadURL": {
+                "DownloadURL": {
                     "default": "Arkime download URL"
                 },
                 "AdminUser": {
@@ -178,7 +178,7 @@
                 "CaptureMaxSize": {
                     "default": "Maximum number of capture instances"
                 },
-                "OperatorEMail": {
+                "OperatorEmail": {
                     "default": "Auto-scale notifications email address"
                 },
                 "CaptureCrossZoneLoadBalancing": {
@@ -190,6 +190,13 @@
                 "LogRetentionDays": {
                     "default": "CloudWatch Logs retention period"
                 }
+            }
+        },
+        "cfn-lint": {
+            config: {
+                ignore_checks: [
+                    "W4002"
+                    ]
             }
         }
     },
@@ -270,7 +277,7 @@
             "Description": "Minumum number of instances in the Capture Auto Scaling group",
             "Default": 2,
             "ConstraintDescription": "must be 1 or greater",
-            "MinValue": 1
+            "MinValue": 0
         },
         "ViewerMaxSize": {
             "Type": "Number",
@@ -284,7 +291,7 @@
             "Description": "Minumum number of instances in the Capture Auto Scaling group",
             "Default": 2,
             "ConstraintDescription": "must be 1 or greater",
-            "MinValue": 1
+            "MinValue": 0
         },
         "CaptureMaxSize": {
             "Type": "Number",
@@ -302,55 +309,22 @@
                 "false"
             ]
         },
+        "InitInstanceType": {
+            "Type": "String",
+            "Default": "t3.micro",
+            "Description": "Enter Init instance type"
+        },
         "ViewerInstanceType": {
             "Type": "String",
             "Default": "t3.small",
-            "AllowedValues": [
-                "t2.micro",
-                "t2.small",
-                "t2.medium",
-                "t2.large",
-                "t3.micro",
-                "t3.small",
-                "t3.medium",
-                "t3.large",
-                "t3a.micro",
-                "t3a.small",
-                "t3a.medium",
-                "t3a.large",
-                "m5.large",
-                "m5a.large",
-                "m5n.large",
-                "c5.large",
-                "c5n.large"
-            ],
             "Description": "Enter Viewer instance type"
         },
         "CaptureInstanceType": {
             "Type": "String",
             "Default": "t3.medium",
-            "AllowedValues": [
-                "t3.micro",
-                "t3.small",
-                "t3.medium",
-                "t3.large",
-                "t3a.small",
-                "t3a.medium",
-                "t3a.large",
-                "m5.large",
-                "m5a.large",
-                "m5n.large",
-                "c5.large",
-                "c5n.large"
-            ],
             "Description": "Enter Capture instance type"
         },
-        "Keypair": {
-            "Type": "AWS::EC2::KeyPair::KeyName",
-            "ConstraintDescription": "must be the name of an existing EC2 KeyPair.",
-            "Description": "Key pair for EC2 instances"
-        },
-        "OperatorEMail": {
+        "OperatorEmail": {
             "Description": "E-mail address to notify if there are any scaling operations",
             "Type": "String",
             "AllowedPattern": "([a-zA-Z0-9_\\-\\.]+)@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.)|(([a-zA-Z0-9\\-]+\\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\\]?)",
@@ -362,28 +336,12 @@
         },
         "ESVersion": {
             "Type": "String",
-            "Default": "7.8",
-            "AllowedValues": [
-                "6.8",
-                "7.8",
-                "7.9"
-            ],
+            "Default": "7.10",
             "Description": "ElasticSearch version"
         },
         "ESInstanceType": {
             "Type": "String",
             "Default": "t3.medium.elasticsearch",
-            "AllowedValues": [
-                "t2.small.elasticsearch",
-                "t2.medium.elasticsearch",
-                "t3.small.elasticsearch",
-                "t3.medium.elasticsearch",
-                "m5.large.elasticsearch",
-                "m4.large.elasticsearch",
-                "c5.large.elasticsearch",
-                "r5.large.elasticsearch",
-                "r4.large.elasticsearch"
-            ],
             "Description": "Enter ElasticSearch instance type"
         },
         "ESInstanceCount": {
@@ -437,9 +395,9 @@
             "MinLength": "6",
             "AllowedPattern": "[a-zA-Z][a-zA-Z0-9]*"
         },
-        "ArkimeDownloadURL": {
+        "DownloadURL": {
             "Type": "String",
-            "Default": "https://s3.amazonaws.com/files.molo.ch/moloch-master.centos7.x86_64.rpm",
+            "Default": "https://s3.amazonaws.com/files.molo.ch/builds/centos-7/arkime-3.0.0-1.x86_64.rpm",
             "Description": "Enter Arkime CentOS 7 RPM package download URL",
             "MinLength": "5"
         },
@@ -534,7 +492,7 @@
                 "CidrBlock": {
                     "Ref": "VpcCIDR"
                 },
-                "EnableDnsHostnames": true
+                "EnableDnsHostnames": true,
             }
         },
         "ESSecurityGroup": {
@@ -557,6 +515,12 @@
                         "FromPort": 443,
                         "IpProtocol": "tcp",
                         "ToPort": 443
+                    }
+                ],
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "127.0.0.1/32",
+                        "IpProtocol": "-1"
                     }
                 ],
                 "VpcId": {
@@ -584,6 +548,12 @@
                         "FromPort": 443,
                         "IpProtocol": "tcp",
                         "ToPort": 443
+                    }
+                ],
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "127.0.0.1/32",
+                        "IpProtocol": "-1"
                     }
                 ],
                 "VpcId": {
@@ -912,7 +882,7 @@
                 ],
                 "Policies": [
                     {
-                        "PolicyName": "MolochCapturePolicy",
+                        "PolicyName": "ArkimeCapturePolicy",
                         "PolicyDocument": {
                             "Version": "2012-10-17",
                             "Statement": [
@@ -968,7 +938,7 @@
                 ],
                 "Policies": [
                     {
-                        "PolicyName": "MolochViewerPolicy",
+                        "PolicyName": "ArkimeViewerPolicy",
                         "PolicyDocument": {
                             "Version": "2012-10-17",
                             "Statement": [
@@ -1047,12 +1017,21 @@
         "LogsEndpoint": {
             "Type": "AWS::EC2::VPCEndpoint",
             "Properties": {
+                "PrivateDnsEnabled": true,
                 "ServiceName": {
                     "Fn::Sub": "com.amazonaws.${AWS::Region}.logs"
                 },
                 "SecurityGroupIds": [
                     {
                         "Ref": "PrivateEndpointSecurityGroup"
+                    }
+                ],
+                "SubnetIds": [
+                    {
+                        "Ref": "PrivateSubnet1"
+                    },
+                    {
+                        "Ref": "PrivateSubnet2"
                     }
                 ],
                 "VpcEndpointType": "Interface",
@@ -1064,12 +1043,21 @@
         "SSMEndpoint": {
             "Type": "AWS::EC2::VPCEndpoint",
             "Properties": {
+                "PrivateDnsEnabled": true,
                 "ServiceName": {
                     "Fn::Sub": "com.amazonaws.${AWS::Region}.ssm"
                 },
                 "SecurityGroupIds": [
                     {
                         "Ref": "PrivateEndpointSecurityGroup"
+                    }
+                ],
+                "SubnetIds": [
+                    {
+                        "Ref": "PrivateSubnet1"
+                    },
+                    {
+                        "Ref": "PrivateSubnet2"
                     }
                 ],
                 "VpcEndpointType": "Interface",
@@ -1081,12 +1069,21 @@
         "EC2MessagesEndpoint": {
             "Type": "AWS::EC2::VPCEndpoint",
             "Properties": {
+                "PrivateDnsEnabled": true,
                 "ServiceName": {
                     "Fn::Sub": "com.amazonaws.${AWS::Region}.ec2messages"
                 },
                 "SecurityGroupIds": [
                     {
                         "Ref": "PrivateEndpointSecurityGroup"
+                    }
+                ],
+                "SubnetIds": [
+                    {
+                        "Ref": "PrivateSubnet1"
+                    },
+                    {
+                        "Ref": "PrivateSubnet2"
                     }
                 ],
                 "VpcEndpointType": "Interface",
@@ -1098,12 +1095,21 @@
         "SSMMessagesEndpoint": {
             "Type": "AWS::EC2::VPCEndpoint",
             "Properties": {
+                "PrivateDnsEnabled": true,
                 "ServiceName": {
                     "Fn::Sub": "com.amazonaws.${AWS::Region}.ssmmessages"
                 },
                 "SecurityGroupIds": [
                     {
                         "Ref": "PrivateEndpointSecurityGroup"
+                    }
+                ],
+                "SubnetIds": [
+                    {
+                        "Ref": "PrivateSubnet1"
+                    },
+                    {
+                        "Ref": "PrivateSubnet2"
                     }
                 ],
                 "VpcEndpointType": "Interface",
@@ -1118,7 +1124,7 @@
                 "Subscription": [
                     {
                         "Endpoint": {
-                            "Ref": "OperatorEMail"
+                            "Ref": "OperatorEmail"
                         },
                         "Protocol": "email"
                     }
@@ -1269,7 +1275,12 @@
                     "LaunchTemplateId": {
                         "Ref": "ViewerLaunchTemplate"
                     },
-                    "Version": "1"
+                    "Version": {
+                        "Fn::GetAtt": [
+                            "ViewerLaunchTemplate",
+                            "LatestVersionNumber"
+                            ]
+                    }
                 },
                 "HealthCheckType": "ELB",
                 "HealthCheckGracePeriod": 600,
@@ -1323,7 +1334,12 @@
                     "LaunchTemplateId": {
                         "Ref": "CaptureLaunchTemplate"
                     },
-                    "Version": "1"
+                    "Version": {
+                        "Fn::GetAtt": [
+                            "CaptureLaunchTemplate",
+                            "LatestVersionNumber"
+                            ]
+                    }
                 },
                 "HealthCheckType": "ELB",
                 "HealthCheckGracePeriod": 600,
@@ -1389,8 +1405,8 @@
                         "configure-all": [
                             "install-configure-cloudwatch-agent",
                             "install-epel",
-                            "install-moloch-dependencies",
-                            "install-moloch"
+                            "install-arkime-dependencies",
+                            "install-arkime"
                         ]
                     },
                     "install-configure-cloudwatch-agent": {
@@ -1408,7 +1424,7 @@
                                                         }
                                                     },
                                                     {
-                                                        "file_path": "/data/moloch/logs/viewer.log",
+                                                        "file_path": "/opt/arkime/logs/viewer.log",
                                                         "log_group_name": {
                                                             "Ref": "ViewerLogGroup"
                                                         }
@@ -1438,7 +1454,7 @@
                             }
                         }
                     },
-                    "install-moloch-dependencies": {
+                    "install-arkime-dependencies": {
                         "packages": {
                             "yum": {
                                 "libyaml-devel": [],
@@ -1448,11 +1464,11 @@
                             }
                         }
                     },
-                    "install-moloch": {
+                    "install-arkime": {
                         "packages": {
                             "rpm": {
-                                "moloch": {
-                                    "Ref": "ArkimeDownloadURL"
+                                "arkime": {
+                                    "Ref": "DownloadURL"
                                 }
                             },
                             "yum": {
@@ -1460,7 +1476,7 @@
                             }
                         },
                         "files": {
-                            "/data/moloch/Configure-answers": {
+                            "/opt/arkime/Configure-answers": {
                                 "content": {
                                     "Fn::Join": [
                                         "\n",
@@ -1492,42 +1508,42 @@
                         },
                         "commands": {
                             "1-remove-yum-prompt": {
-                                "command": "sed -i \"s/yum install/yum -y install/g\" /data/moloch/bin/Configure"
+                                "command": "sed -i \"s/yum install/yum -y install/g\" /opt/arkime/bin/Configure"
                             },
-                            "2-configure-moloch": {
-                                "command": "/data//moloch/bin/Configure < /data/moloch/Configure-answers"
+                            "2-configure-arkime": {
+                                "command": "/opt/arkime/bin/Configure < /opt/arkime/Configure-answers"
                             },
                             "6.1-set-S3-region": {
                                 "command": {
-                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3Region ${AWS::Region}"
+                                    "Fn::Sub": "crudini --set /opt/arkime/etc/config.ini default s3Region ${AWS::Region}"
                                 }
                             },
                             "6.2-set-S3-bucket": {
                                 "command": {
-                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3Bucket ${S3Bucket}"
+                                    "Fn::Sub": "crudini --set /opt/arkime/etc/config.ini default s3Bucket ${S3Bucket}"
                                 }
                             },
                             "6.3-set-viewer-plugin": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default viewerPlugins writer-s3/index.js"
+                                "command": "crudini --set /opt/arkime/etc/config.ini default viewerPlugins writer-s3/index.js"
                             },
                             "6.4-set-pcap-write-method": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default pcapWriteMethod s3"
+                                "command": "crudini --set /opt/arkime/etc/config.ini default pcapWriteMethod s3"
                             },
                             "6.5-set-S3-ExpireDays": {
                                 "command": {
-                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3ExpireDays ${S3ExpireDays}"
+                                    "Fn::Sub": "crudini --set /opt/arkime/etc/config.ini default s3ExpireDays ${S3ExpireDays}"
                                 }
                             },
                             "6.6-remove-geoLite2ASN": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default geoLite2ASN \"\""
+                                "command": "crudini --set /opt/arkime/etc/config.ini default geoLite2ASN \"\""
                             },
                             "6.7-remove-geoLite2Country ": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default geoLite2Country \"\""
+                                "command": "crudini --set /opt/arkime/etc/config.ini default geoLite2Country \"\""
                             }
                         },
                         "services": {
                             "sysvinit": {
-                                "molochviewer": {
+                                "arkimeviewer": {
                                     "enabled": "true",
                                     "ensureRunning": "true"
                                 }
@@ -1548,9 +1564,6 @@
                     },
                     "InstanceType": {
                         "Ref": "ViewerInstanceType"
-                    },
-                    "KeyName": {
-                        "Ref": "Keypair"
                     },
                     "SecurityGroupIds": [
                         {
@@ -1614,8 +1627,8 @@
                             "install-configure-cloudwatch-agent",
                             "install-epel",
                             "install-suricata",
-                            "install-moloch-dependencies",
-                            "install-moloch"
+                            "install-arkime-dependencies",
+                            "install-arkime"
                         ]
                     },
                     "install-configure-cloudwatch-agent": {
@@ -1633,7 +1646,7 @@
                                                         }
                                                     },
                                                     {
-                                                        "file_path": "/data/moloch/logs/capture.log",
+                                                        "file_path": "/opt/arkime/logs/capture.log",
                                                         "log_group_name": {
                                                             "Ref": "CaptureLogGroup"
                                                         }
@@ -1700,7 +1713,7 @@
                             }
                         }
                     },
-                    "install-moloch-dependencies": {
+                    "install-arkime-dependencies": {
                         "packages": {
                             "yum": {
                                 "libyaml-devel": [],
@@ -1710,11 +1723,11 @@
                             }
                         }
                     },
-                    "install-moloch": {
+                    "install-arkime": {
                         "packages": {
                             "rpm": {
-                                "moloch": {
-                                    "Ref": "ArkimeDownloadURL"
+                                "arkime": {
+                                    "Ref": "DownloadURL"
                                 }
                             },
                             "yum": {
@@ -1722,7 +1735,7 @@
                             }
                         },
                         "files": {
-                            "/data/moloch/Configure-answers": {
+                            "/opt/arkime/Configure-answers": {
                                 "content": {
                                     "Fn::Join": [
                                         "\n",
@@ -1754,67 +1767,67 @@
                         },
                         "commands": {
                             "1-remove-yum-prompt": {
-                                "command": "sed -i \"s/yum install/yum -y install/g\" /data/moloch/bin/Configure"
+                                "command": "sed -i \"s/yum install/yum -y install/g\" /opt/arkime/bin/Configure"
                             },
-                            "2-configure-moloch": {
-                                "command": "/data//moloch/bin/Configure < /data/moloch/Configure-answers"
+                            "2-configure-arkime": {
+                                "command": "/opt/arkime/bin/Configure < /opt/arkime/Configure-answers"
                             },
                             "3-add-plugins": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default plugins \"suricata.so; writer-s3.so; tcphealthcheck.so\""
+                                "command": "crudini --set /opt/arkime/etc/config.ini default plugins \"suricata.so; writer-s3.so; tcphealthcheck.so\""
                             },
                             "4-add-suricata-alert-file": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default suricataAlertFile /var/log/suricata/eve.json"
+                                "command": "crudini --set /opt/arkime/etc/config.ini default suricataAlertFile /var/log/suricata/eve.json"
                             },
                             "5-add-bpf": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default bpf \"udp port 4789\""
+                                "command": "crudini --set /opt/arkime/etc/config.ini default bpf \"udp port 4789\""
                             },
                             "6.1-set-S3-region": {
                                 "command": {
-                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3Region ${AWS::Region}"
+                                    "Fn::Sub": "crudini --set /opt/arkime/etc/config.ini default s3Region ${AWS::Region}"
                                 }
                             },
                             "6.2-set-S3-bucket": {
                                 "command": {
-                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default s3Bucket ${S3Bucket}"
+                                    "Fn::Sub": "crudini --set /opt/arkime/etc/config.ini default s3Bucket ${S3Bucket}"
                                 }
                             },
                             "6.3-set-viewer-plugin": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default viewerPlugins writer-s3/index.js"
+                                "command": "crudini --set /opt/arkime/etc/config.ini default viewerPlugins writer-s3/index.js"
                             },
                             "6.4-set-pcap-write-method": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default pcapWriteMethod s3"
+                                "command": "crudini --set /opt/arkime/etc/config.ini default pcapWriteMethod s3"
                             },
                             "6.5-set-maxFileTimeM": {
                                 "command": {
-                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default maxFileTimeM ${S3FlushInterval}"
+                                    "Fn::Sub": "crudini --set /opt/arkime/etc/config.ini default maxFileTimeM ${S3FlushInterval}"
                                 }
                             },
                             "6.6-set-maxFileSizeG": {
                                 "command": {
-                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default maxFileSizeG ${S3FMaxObjectSizeGB}"
+                                    "Fn::Sub": "crudini --set /opt/arkime/etc/config.ini default maxFileSizeG ${S3FMaxObjectSizeGB}"
                                 }
                             },
                             "6.7-remove-geoLite2ASN": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default geoLite2ASN \"\""
+                                "command": "crudini --set /opt/arkime/etc/config.ini default geoLite2ASN \"\""
                             },
                             "6.8-remove-geoLite2Country ": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default geoLite2Country \"\""
+                                "command": "crudini --set /opt/arkime/etc/config.ini default geoLite2Country \"\""
                             },
                             "6.9-set-tcp-health-check": {
                                 "command": {
-                                    "Fn::Sub": "crudini --set /data/moloch/etc/config.ini default tcpHealthCheckPort ${TcpHealthCheckPort}"
+                                    "Fn::Sub": "crudini --set /opt/arkime/etc/config.ini default tcpHealthCheckPort ${TcpHealthCheckPort}"
                                 }
                             },
                             "7.1-change-dropUser": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default dropUser suricata"
+                                "command": "crudini --set /opt/arkime/etc/config.ini default dropUser suricata"
                             },
                             "7.2-change-dropGroup": {
-                                "command": "crudini --set /data/moloch/etc/config.ini default dropGroup suricata"
+                                "command": "crudini --set /opt/arkime/etc/config.ini default dropGroup suricata"
                             }
                         },
                         "services": {
                             "sysvinit": {
-                                "molochcapture": {
+                                "arkimecapture": {
                                     "enabled": "true",
                                     "ensureRunning": "true"
                                 }
@@ -1835,9 +1848,6 @@
                     },
                     "InstanceType": {
                         "Ref": "CaptureInstanceType"
-                    },
-                    "KeyName": {
-                        "Ref": "Keypair"
                     },
                     "SecurityGroupIds": [
                         {
@@ -1898,11 +1908,11 @@
                 "AWS::CloudFormation::Init": {
                     "configSets": {
                         "configure-all": [
-                            "install-moloch-dependencies",
-                            "install-moloch"
+                            "install-arkime-dependencies",
+                            "install-arkime"
                         ]
                     },
-                    "install-moloch-dependencies": {
+                    "install-arkime-dependencies": {
                         "packages": {
                             "yum": {
                                 "libyaml-devel": [],
@@ -1912,16 +1922,16 @@
                             }
                         }
                     },
-                    "install-moloch": {
+                    "install-arkime": {
                         "packages": {
                             "rpm": {
-                                "moloch": {
-                                    "Ref": "ArkimeDownloadURL"
+                                "arkime": {
+                                    "Ref": "DownloadURL"
                                 }
                             }
                         },
                         "files": {
-                            "/data/moloch/Configure-answers": {
+                            "/opt/arkime/Configure-answers": {
                                 "content": {
                                     "Fn::Join": [
                                         "\n",
@@ -1950,18 +1960,18 @@
                                     ]
                                 }
                             },
-                            "/data/moloch/db/safeinit.sh": {
+                            "/opt/arkime/db/safeinit.sh": {
                                 "content": {
                                     "Fn::Join": [
                                         "\n",
                                         [
                                             "echo 'Checking ES URL:' $1",
-                                            "if /data/moloch/db/db.pl $1 info 2>/dev/null | grep 'DB Version' | grep '\\-1' >/dev/null",
+                                            "if /opt/arkime/db/db.pl $1 info 2>/dev/null | grep 'DB Version' | grep '\\-1' >/dev/null",
                                             "then",
                                             "    echo 'ES running but not initialised, initialising...'",
-                                            "    /data/moloch/db/db.pl $1 init && /data/moloch/bin/moloch_add_user.sh \"$2\" \"Admin User\" \"$3\" --admin",
+                                            "    /opt/arkime/db/db.pl $1 init && /opt/arkime/bin/arkime_add_user.sh \"$2\" \"Admin User\" \"$3\" --admin",
                                             "    exit $?",
-                                            "elif /data/moloch/db/db.pl $1 info >/dev/null 2>&1",
+                                            "elif /opt/arkime/db/db.pl $1 info >/dev/null 2>&1",
                                             "then",
                                             "    echo 'ES running and initialised. Nothing to do.'",
                                             "    exit 0",
@@ -1977,17 +1987,17 @@
                         },
                         "commands": {
                             "1-remove-yum-prompt": {
-                                "command": "sed -i \"s/yum install/yum -y install/g\" /data/moloch/bin/Configure"
+                                "command": "sed -i \"s/yum install/yum -y install/g\" /opt/arkime/bin/Configure"
                             },
-                            "2-configure-moloch": {
-                                "command": "/data//moloch/bin/Configure < /data/moloch/Configure-answers"
+                            "2-configure-arkime": {
+                                "command": "/opt/arkime/bin/Configure < /opt/arkime/Configure-answers"
                             },
                             "3-ES-init": {
                                 "command": {
                                     "Fn::Join": [
                                         " ",
                                         [
-                                            "/data/moloch/db/safeinit.sh",
+                                            "/opt/arkime/db/safeinit.sh",
                                             {
                                                 "Fn::Join": [
                                                     "",
@@ -2020,9 +2030,11 @@
                 "ImageId": {
                     "Ref": "LatestAmiId"
                 },
-                "InstanceType": "t3.micro",
-                "KeyName": {
-                    "Ref": "Keypair"
+                "InstanceType": {
+                    "Ref": "InitInstanceType"
+                },
+                "IamInstanceProfile": {
+                    "Ref": "CaptureInstanceProfile"
                 },
                 "SecurityGroupIds": [
                     {
@@ -2081,7 +2093,8 @@
                 }
             },
             "CreationPolicy": {
-                "ResourceSignal": {}
+                "ResourceSignal": {
+                }
             }
         },
         "ViewerLBSecurityGroup": {
@@ -2111,6 +2124,20 @@
                 }
             }
         },
+        "ViewerLBSecurityGroupEgress": {
+            "Type" : "AWS::EC2::SecurityGroupEgress",
+            "Properties": {
+                "GroupId": {
+                    "Ref": "ViewerLBSecurityGroup"
+                },
+                "DestinationSecurityGroupId": {
+                    "Ref": "ViewerInstanceSecurityGroup"
+                },
+                "FromPort": 8005,
+                "IpProtocol": "tcp",
+                "ToPort": 8005
+            }
+        },
         "ViewerInstanceSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
@@ -2123,6 +2150,12 @@
                         "FromPort": 8005,
                         "IpProtocol": "tcp",
                         "ToPort": 8005
+                    }
+                ],
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "IpProtocol": "-1"
                     }
                 ],
                 "VpcId": {
@@ -2182,6 +2215,12 @@
                         "ToPort": {
                             "Ref": "TcpHealthCheckPort"
                         }
+                    }
+                ],
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "IpProtocol": "-1"
                     }
                 ],
                 "VpcId": {
